@@ -5,7 +5,12 @@ const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server, { cors: { origin: "*" } });
+
+// زيادة حجم استقبال البيانات لـ 100MB لمنع انقطاع الصوت والأغاني
+const io = new Server(server, {
+    maxHttpBufferSize: 1e8,
+    cors: { origin: "*" }
+});
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -41,7 +46,7 @@ io.on('connection', (socket) => {
             number: data.number,
             gender: data.gender || 'male',
             isFrontMan: data.isFrontMan || false,
-            x: 0, y: 1.6, z: 12,
+            x: 0, y: 1.6, z: 10,
             rotationY: 0,
             health: 100
         };
@@ -62,19 +67,19 @@ io.on('connection', (socket) => {
         }
     });
 
-    // بث مايك المسؤول Admin
-    socket.on('adminAudioStream', (audioChunk) => {
-        socket.broadcast.emit('receiveAdminVoice', audioChunk);
+    // بث مايك الأدمن المباشر للجميع
+    socket.on('adminAudioStream', (audioBuffer) => {
+        socket.broadcast.emit('receiveAdminVoice', audioBuffer);
     });
 
     // بث مايك اللاعبين
-    socket.on('playerVoiceStream', (audioChunk) => {
+    socket.on('playerVoiceStream', (audioBuffer) => {
         if(!gameState.globalMute) {
-            socket.broadcast.emit('receivePlayerVoice', audioChunk);
+            socket.broadcast.emit('receivePlayerVoice', { id: socket.id, buffer: audioBuffer });
         }
     });
 
-    // بث الموسيقى من لوحة التحكم
+    // بث الصوت والموسيقى من لوحة الـ Admin
     socket.on('adminMusicControl', (data) => {
         io.emit('syncMusic', data);
     });
@@ -143,4 +148,4 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => console.log(`🚀 السيرفر يعمل على المنفذ: ${PORT}`));
+server.listen(PORT, () => console.log(`🚀 السيرفر يعمل باحترافية على المنفذ: ${PORT}`));
