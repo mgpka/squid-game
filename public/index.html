@@ -10,7 +10,6 @@
         
         #rotateNotice { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; color:#fff; display:none; flex-direction:column; justify-content:center; align-items:center; z-index:9999; text-align:center; font-size:20px; }
 
-        /* واجهة التسجيل الدخول */
         #lobbyUI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://images.unsplash.com/photo-1634193295627-1cdddf751ebf?q=80&w=1000') center/cover; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 100; }
         #lobbyUI h1 { color: #ff0055; font-size: 32px; margin-bottom: 12px; text-shadow: 0 0 15px #ff0055; text-align: center; font-weight: 900; }
         .form-group { background: rgba(20, 20, 30, 0.95); border: 2px solid #ff0055; padding: 20px; border-radius: 12px; width: 320px; display: flex; flex-direction: column; gap: 10px; text-align: right; box-shadow: 0 0 25px rgba(255,0,85,0.3); }
@@ -21,20 +20,16 @@
         .gender-btn.active { border-color: #ff0055; background: #ff0055; font-weight: bold; }
         #joinBtn { padding: 12px; font-size: 17px; font-weight: bold; background: #ff0055; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; }
 
-        /* HUD اللعب */
         #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: none; }
-        #topStats { position: absolute; top: 12px; width: 100%; text-align: center; color: white; text-shadow: 2px 2px 5px #000; font-family: monospace; }
-        #playerCountDisplay { font-size: 32px; font-weight: 900; }
+        #topStats { position: absolute; top: 12px; width: 100%; text-align: center; color: white; text-shadow: 2px 2px 5px #000; font-family: sans-serif; }
+        #playerCountDisplay { font-size: 34px; font-weight: 900; }
 
-        /* العناصر الحرة القابلة للتخصيص والسحب بالكامل */
         .movable-element { position: absolute; pointer-events: auto; user-select: none; z-index: 20; }
-
         .hud-btn { width: 48px; height: 48px; border-radius: 50%; background: rgba(0,0,0,0.65); border: 2px solid #fff; color: white; font-size: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(4px); }
         .hud-btn.active-green { background: #00ffcc; color: #000; border-color: #00ffcc; }
 
         #topRightControls { top: 15px; right: 15px; display: flex; gap: 10px; }
 
-        /* قائمة الإعدادات الموسعة بالتحكم بالصوت والحساسية */
         #settingsMenu { position: absolute; top: 70px; left: 15px; background: rgba(15,15,20,0.95); border: 2px solid #ff0055; padding: 15px; border-radius: 12px; color: white; width: 280px; display: none; pointer-events: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.8); z-index: 500; }
         #settingsMenu label { font-size: 12px; display: block; margin-top: 8px; color: #aaa; }
         #settingsMenu input[type="range"] { width: 100%; margin-top: 2px; }
@@ -67,7 +62,7 @@
             <label>اسم اللاعب:</label>
             <input type="text" id="pName" placeholder="اسمك">
             <label>رقم اللاعب (1 - 30):</label>
-            <input type="number" id="pNum" min="1" max="30" placeholder="16">
+            <input type="number" id="pNum" min="1" max="30" placeholder="123">
             <label>تحديد الجنس:</label>
             <div class="gender-box">
                 <div class="gender-btn active" id="gMale" onclick="setGender('male')">ذكر ♂</div>
@@ -82,7 +77,7 @@
     <div id="hud">
         <div id="topStats">
             <div id="playerCountDisplay">1/30</div>
-            <div id="gameStatusText" style="font-size:15px; color:#ff0055;">Waiting for players...</div>
+            <div id="gameStatusText" style="font-size:16px; color:#ffffff; font-weight:bold;">Waiting for more players.<br>Game starts soon</div>
         </div>
 
         <div id="topRightControls" class="movable-element">
@@ -92,10 +87,8 @@
             <div id="micBtn" class="hud-btn" onclick="toggleMic()">🎙️</div>
         </div>
 
-        <!-- قائمة الإعدادات الشاملة للتحكم بالحساسية وأصوات اللعبة والأغاني واللاعبين -->
         <div id="settingsMenu">
             <h3 style="margin:0 0 8px 0; color:#ff0055; text-align:center;">الإعدادات</h3>
-            
             <label>حساسية التدوير والرؤية (Sensitivity):</label>
             <input type="range" id="sensSlider" min="1" max="10" value="5" onchange="updateAudioAndSens()">
 
@@ -118,7 +111,6 @@
         <div id="btnPunch" class="movable-element action-circle-btn" onclick="doPunch()">ضرب</div>
 
         <button id="saveHudBtn" onclick="saveCustomHud()">حفظ الأماكن 💾</button>
-
         <div id="crosshair"></div>
     </div>
 
@@ -135,10 +127,7 @@
         let mediaRecorder = null, localAudioStream = null;
         let isEditHudMode = false;
 
-        // متغيرات التحكم بالأصوات
         let sfxVolume = 0.8, musicVolume = 0.7, voiceVolume = 1.0;
-
-        // زوايا كاميرا الرؤية (Pitch & Yaw)
         let cameraPitch = 0, cameraYaw = 0;
 
         let audioCtx = null, voiceGainNode = null;
@@ -199,8 +188,8 @@
             const num = parseInt(document.getElementById('pNum').value);
             const pass = document.getElementById('pPass').value;
 
-            if(!name || (!isFrontManMode && (isNaN(num) || num < 1 || num > 30)) || !pass) {
-                return alert("أدخل كافة البيانات واختر رقماً بين 1 و 30!");
+            if(!name || (!isFrontManMode && (isNaN(num) || num < 1 || num > 999)) || !pass) {
+                return alert("أدخل كافة البيانات واختر رقماً مناسباً!");
             }
 
             window.AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -224,172 +213,295 @@
             });
         }
 
+        // بناء اللوبي المطابق تماماً للعبة الأصلي بالصور
         function init3D() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a24);
+            scene.background = new THREE.Color(0x131d1b);
 
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.rotation.order = 'YXZ';
-            camera.position.set(0, 1.7, 10);
+            camera.position.set(0, 1.8, 12);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
             const light = new THREE.DirectionalLight(0xffffff, 1.2);
-            light.position.set(0, 30, 10);
+            light.position.set(0, 35, 10);
             scene.add(light);
-            scene.add(new THREE.AmbientLight(0x777788));
+            scene.add(new THREE.AmbientLight(0x9999aa));
 
-            // أرضية القاعة
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0xc8cbd0, roughness: 0.4 }));
+            // أرضية رمادية فاتحة
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: 0xd2d6dc, roughness: 0.5 }));
             floor.rotation.x = -Math.PI / 2;
             scene.add(floor);
 
-            // جدران بيضاء عالية
-            const wallMat = new THREE.MeshStandardMaterial({ color: 0xededed });
-            const backWall = new THREE.Mesh(new THREE.BoxGeometry(60, 22, 1), wallMat);
-            backWall.position.set(0, 11, -30);
-            scene.add(backWall);
+            // الجدران ثنائية الألوان (أسفل سيراميك أبيض وأعلى أخضر غامق Teal)
+            createSquidGameWalls();
 
-            const leftWall = new THREE.Mesh(new THREE.BoxGeometry(1, 22, 60), wallMat);
-            leftWall.position.set(-30, 11, 0);
-            scene.add(leftWall);
+            // النفق القوسي الأبيض بالمدخل (نفس الصورة 13)
+            createArchwayEntrance();
 
-            const rightWall = new THREE.Mesh(new THREE.BoxGeometry(1, 22, 60), wallMat);
-            rightWall.position.set(30, 11, 0);
-            scene.add(rightWall);
+            // كرة الأموال الذهبية المعلقة بسلاسل بالسقف (نفس الصورة 15 و16)
+            createPiggyBank();
 
-            // سقف القاعة
-            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0x33333d }));
-            ceiling.position.set(0, 22, 0);
-            ceiling.rotation.x = Math.PI / 2;
-            scene.add(ceiling);
+            // المدرجات الشاهقة للأسِرّة الطابقية (نفس الصورة 10 و17 و18)
+            createTieredBunkBeds();
 
-            // إضافة اسم التيم والرموز الشفافة على الحايط الرئيسي
-            drawMainWallBranding();
-
-            // أسِرّة طابقية جدارية
-            for(let z = -20; z <= 10; z += 8) {
-                createBunkBed(-26, z, Math.PI / 2);
-                createBunkBed(26, z, -Math.PI / 2);
-            }
+            // كتابة شعار "الأمراء" والرموز الشفافة فوق القوس الرئيسي
+            drawBrandingOnMainWall();
 
             animate();
         }
 
-        // رسم اسم التيم والرموز على الجدار الرئيسي بأسلوب شفاف وأنيق
-        function drawMainWallBranding() {
-            const canvas = document.createElement('canvas');
-            canvas.width = 1024; canvas.height = 512;
-            const ctx = canvas.getContext('2d');
+        // بناء الجدران بخطوط السيراميك والجزء الأخضر
+        function createSquidGameWalls() {
+            const wallHeight = 28;
             
-            ctx.clearRect(0, 0, 1024, 512);
+            // خامة الجدار السفلي السيراميك الأبيض
+            const lowerCanvas = document.createElement('canvas');
+            lowerCanvas.width = 512; lowerCanvas.height = 512;
+            const lCtx = lowerCanvas.getContext('2d');
+            lCtx.fillStyle = '#f0f3f5'; lCtx.fillRect(0, 0, 512, 512);
+            lCtx.strokeStyle = '#cccccc'; lCtx.lineWidth = 4;
+            for(let y=0; y<=512; y+=64) { lCtx.beginPath(); lCtx.moveTo(0, y); lCtx.lineTo(512, y); lCtx.stroke(); }
+            const lowerTex = new THREE.CanvasTexture(lowerCanvas);
+            lowerTex.wrapS = THREE.RepeatWrapping; lowerTex.wrapT = THREE.RepeatWrapping; lowerTex.repeat.set(8, 1);
 
-            // رسم أشكال لعبة الحبار الشفافة ⭕ 🔺 ⬛
-            ctx.lineWidth = 14; ctx.strokeStyle = '#222222';
-            ctx.beginPath(); ctx.arc(250, 200, 75, 0, Math.PI * 2); ctx.stroke();
-            ctx.beginPath(); ctx.moveTo(512, 125); ctx.lineTo(430, 275); ctx.lineTo(594, 275); ctx.closePath(); ctx.stroke();
-            ctx.strokeRect(690, 125, 150, 150);
+            const lowerMat = new THREE.MeshStandardMaterial({ map: lowerTex });
+            const upperMat = new THREE.MeshStandardMaterial({ color: 0x1e4d40, roughness: 0.6 });
 
-            // كتابة العبارة الرئيسية: الأمراء | 𝔞𝔩 𝔭𝔯𝔧𝔫𝔠𝔢𝔰
-            ctx.fillStyle = '#ff0055';
-            ctx.font = 'Bold 48px Segoe UI, Tahoma, sans-serif';
-            ctx.textAlign = 'center';
-            ctx.shadowColor = 'rgba(0,0,0,0.5)';
-            ctx.shadowBlur = 10;
-            ctx.fillText('الأمراء | 𝔞𝔩 𝔭𝔯𝔧𝔫𝔠𝔢𝔰', 512, 400);
+            // إضافة الجدران الأربعة
+            const walls = [
+                { pos: [0, 0, -40], rot: 0 },
+                { pos: [0, 0, 40], rot: Math.PI },
+                { pos: [-40, 0, 0], rot: Math.PI / 2 },
+                { pos: [40, 0, 0], rot: -Math.PI / 2 }
+            ];
 
-            const texture = new THREE.CanvasTexture(canvas);
-            const symbolMesh = new THREE.Mesh(
-                new THREE.PlaneGeometry(32, 16),
-                new THREE.MeshBasicMaterial({ map: texture, transparent: true })
-            );
-            symbolMesh.position.set(0, 12, -29.4);
-            scene.add(symbolMesh);
+            walls.forEach(w => {
+                const group = new THREE.Group();
+                const lower = new THREE.Mesh(new THREE.BoxGeometry(80, 8, 1), lowerMat);
+                lower.position.set(0, 4, 0);
+                const upper = new THREE.Mesh(new THREE.BoxGeometry(80, 20, 1), upperMat);
+                upper.position.set(0, 18, 0);
+                group.add(lower); group.add(upper);
+                group.position.set(w.pos[0], w.pos[1], w.pos[2]);
+                group.rotation.y = w.rot;
+                scene.add(group);
+            });
+
+            // سقف مظلم
+            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: 0x111816 }));
+            ceiling.position.set(0, 28, 0); ceiling.rotation.x = Math.PI / 2;
+            scene.add(ceiling);
         }
 
-        // إنشاء الأسِرّة الطابقية بالهيكل والمفارش
-        function createBunkBed(x, z, rotY) {
+        // مدخل النفق القوسي الحقيقي بالخلف
+        function createArchwayEntrance() {
             const group = new THREE.Group();
-            const frameMat = new THREE.MeshStandardMaterial({ color: 0x222222, metalness: 0.8 });
-            const matMat = new THREE.MeshStandardMaterial({ color: 0x3b5998 });
+            
+            const arch = new THREE.Mesh(new THREE.CylinderGeometry(8, 8, 8, 32, 1, true, 0, Math.PI), new THREE.MeshStandardMaterial({ color: 0xeeeeee, side: THREE.DoubleSide }));
+            arch.rotation.x = Math.PI / 2;
+            arch.position.set(0, 4, -36);
+            group.add(arch);
 
-            // الأعمدة الأربعة
-            for(let px of [-1.3, 1.3]) {
-                for(let pz of [-2.8, 2.8]) {
-                    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.08, 5, 8), frameMat);
-                    pole.position.set(px, 2.5, pz);
-                    group.add(pole);
-                }
-            }
+            const door = new THREE.Mesh(new THREE.BoxGeometry(6, 6, 0.2), new THREE.MeshStandardMaterial({ color: 0x222222 }));
+            door.position.set(0, 3, -39.8);
+            group.add(door);
 
-            // الطابق الأول والثاني (المفرش)
-            for(let y of [1.2, 3.5]) {
-                const mat = new THREE.Mesh(new THREE.BoxGeometry(2.5, 0.4, 5.5), matMat);
-                mat.position.set(0, y, 0);
-                group.add(mat);
-            }
-
-            group.position.set(x, 0, z);
-            group.rotation.y = rotY;
             scene.add(group);
         }
 
-        // إنشاء مجسم بشري كامل للولد والبنت ببدلة المسلسل
+        // كرة الأموال الذهبية المعلقة بالسقف
+        function createPiggyBank() {
+            const group = new THREE.Group();
+
+            // كرة زجاجية مع ضوء ذهبي داخلي
+            const glassSphere = new THREE.Mesh(
+                new THREE.SphereGeometry(4.5, 32, 32),
+                new THREE.MeshStandardMaterial({ color: 0xffd700, transparent: true, opacity: 0.65, metalness: 0.9, roughness: 0.1 })
+            );
+            group.add(glassSphere);
+
+            // ضوء دافئ مشع داخل الكرة
+            const innerLight = new THREE.PointLight(0xffaa00, 3, 30);
+            group.add(innerLight);
+
+            // أضواء موجهة حول الكرة
+            for(let i=0; i<6; i++) {
+                const bulb = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), new THREE.MeshBasicMaterial({ color: 0xffffff }));
+                const angle = (i / 6) * Math.PI * 2;
+                bulb.position.set(Math.cos(angle)*4.5, Math.sin(angle)*4.5, 0);
+                group.add(bulb);
+            }
+
+            // سلاسل التعليق بالسقف
+            const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 12), new THREE.MeshBasicMaterial({ color: 0x333333 }));
+            chain.position.y = 10;
+            group.add(chain);
+
+            group.position.set(0, 18, 0);
+            scene.add(group);
+        }
+
+        // الأسِرّة الطابقية الشاهقة المدرجة
+        function createTieredBunkBeds() {
+            const bedMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.8 });
+            const sheetMat = new THREE.MeshStandardMaterial({ color: 0x829bb0 });
+
+            function createSingleBedStack(x, z, rotY, tiers) {
+                const group = new THREE.Group();
+                for(let t=0; t<tiers; t++) {
+                    const y = t * 1.6;
+                    const frame = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.15, 5), bedMat);
+                    frame.position.set(0, y + 0.5, 0);
+                    const mattress = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.3, 4.8), sheetMat);
+                    mattress.position.set(0, y + 0.7, 0);
+                    group.add(frame); group.add(mattress);
+                }
+                // الأعمدة
+                for(let px of [-1.2, 1.2]) {
+                    for(let pz of [-2.4, 2.4]) {
+                        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, tiers * 1.6), bedMat);
+                        pole.position.set(px, (tiers * 1.6)/2, pz);
+                        group.add(pole);
+                    }
+                }
+                group.position.set(x, 0, z);
+                group.rotation.y = rotY;
+                scene.add(group);
+            }
+
+            // ترتيب الأسِرّة على مدرجات الجوانب والجدار الخلفي
+            for(let i=-3; i<=3; i++) {
+                if(i !== 0) {
+                    createSingleBedStack(i * 7, -32, 0, 4);
+                }
+            }
+            for(let z=-20; z<=20; z+=8) {
+                createSingleBedStack(-32, z, Math.PI / 2, 4);
+                createSingleBedStack(32, z, -Math.PI / 2, 4);
+            }
+        }
+
+        // رسم الشعار والرموز الشفافة
+        function drawBrandingOnMainWall() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 1024; canvas.height = 512;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, 1024, 512);
+
+            ctx.lineWidth = 14; ctx.strokeStyle = '#222222';
+            ctx.beginPath(); ctx.arc(250, 160, 70, 0, Math.PI * 2); ctx.stroke();
+            ctx.beginPath(); ctx.moveTo(512, 90); ctx.lineTo(430, 230); ctx.lineTo(594, 230); ctx.closePath(); ctx.stroke();
+            ctx.strokeRect(690, 90, 140, 140);
+
+            ctx.fillStyle = '#ff0055';
+            ctx.font = 'Bold 46px Segoe UI, Tahoma, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('الأمراء | 𝔞𝔩 𝔭𝔯𝔧𝔫𝔠𝔢𝔰', 512, 360);
+
+            const texture = new THREE.CanvasTexture(canvas);
+            const mesh = new THREE.Mesh(new THREE.PlaneGeometry(28, 14), new THREE.MeshBasicMaterial({ map: texture, transparent: true }));
+            mesh.position.set(0, 15, -39.3);
+            scene.add(mesh);
+        }
+
+        // إنشاء المجسم البشري الكامل المماثل لصور اللعبة 100%
         function createPlayerMesh(player) {
             const group = new THREE.Group();
 
             const isFemale = (player.gender === 'female');
-            const suitColor = player.isFrontMan ? 0x111111 : 0x008055;
-            const suitMat = new THREE.MeshStandardMaterial({ color: suitColor });
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xffdbac });
-
-            // الجسم (Torso)
-            const bodyWidth = isFemale ? 0.65 : 0.8;
-            const body = new THREE.Mesh(new THREE.BoxGeometry(bodyWidth, 0.9, 0.4), suitMat);
-            body.position.y = 0.9;
-            group.add(body);
+            const greenSuitMat = new THREE.MeshStandardMaterial({ color: 0x00a86b, roughness: 0.4 });
+            const whiteStripMat = new THREE.MeshStandardMaterial({ color: 0xffffff });
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xd2986f, roughness: 0.8 });
+            const hairMat = new THREE.MeshStandardMaterial({ color: 0x4a2c11 });
 
             // الرأس (Head)
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.25, 16, 16), skinMat);
-            head.position.y = 1.55;
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 16), skinMat);
+            head.position.y = 1.6;
             group.add(head);
 
-            // شعر أطول للبنات
-            if(isFemale && !player.isFrontMan) {
-                const hair = new THREE.Mesh(new THREE.SphereGeometry(0.28, 16, 16), new THREE.MeshStandardMaterial({ color: 0x221100 }));
-                hair.position.set(0, 1.6, -0.05);
+            // الشعر البني للولد والبنية (طويل ومربوط للبنات)
+            if(isFemale) {
+                const hair = new THREE.Mesh(new THREE.SphereGeometry(0.27, 16, 16), hairMat);
+                hair.position.set(0, 1.65, -0.05);
+                const ponytail = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.03, 0.4), hairMat);
+                ponytail.position.set(0, 1.5, -0.3);
+                ponytail.rotation.x = -0.5;
+                group.add(hair); group.add(ponytail);
+            } else {
+                const hair = new THREE.Mesh(new THREE.SphereGeometry(0.26, 16, 16), hairMat);
+                hair.position.set(0, 1.68, 0);
                 group.add(hair);
+            }
+
+            // الجذع (Torso)
+            const torsoWidth = isFemale ? 0.6 : 0.72;
+            const torso = new THREE.Mesh(new THREE.BoxGeometry(torsoWidth, 0.85, 0.38), greenSuitMat);
+            torso.position.y = 0.95;
+            group.add(torso);
+
+            // القميص الأبيض الداخلي
+            const innerShirt = new THREE.Mesh(new THREE.BoxGeometry(torsoWidth * 0.5, 0.86, 0.39), whiteStripMat);
+            innerShirt.position.y = 0.95;
+            group.add(innerShirt);
+
+            // الخط الأبيض الجانبي على البدلة
+            for(let side of [-1, 1]) {
+                const stripe = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.85, 0.4), whiteStripMat);
+                stripe.position.set(side * (torsoWidth/2 + 0.01), 0.95, 0);
+                group.add(stripe);
             }
 
             // الأذرع
             for(let side of [-1, 1]) {
-                const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 0.7), suitMat);
-                arm.position.set(side * (bodyWidth / 2 + 0.12), 0.85, 0);
+                const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.75), greenSuitMat);
+                arm.position.set(side * (torsoWidth/2 + 0.12), 0.9, 0);
                 group.add(arm);
             }
 
-            // الأرجل
+            // الساقان
             for(let side of [-1, 1]) {
-                const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.12, 0.8), suitMat);
-                leg.position.set(side * 0.2, 0.4, 0);
+                const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.1, 0.85), greenSuitMat);
+                leg.position.set(side * 0.18, 0.42, 0);
                 group.add(leg);
+
+                // حذاء رياضي أبيض
+                const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.15, 0.12, 0.3), whiteStripMat);
+                shoe.position.set(side * 0.18, 0.06, 0.05);
+                group.add(shoe);
             }
 
-            // اسم ورقم اللاعب أعلى الرأس
+            // طباعة رقم اللاعب المكتوب على الصدر والظهر (نفس صورة 12)
             const canvas = document.createElement('canvas');
+            canvas.width = 256; canvas.height = 128;
             const ctx = canvas.getContext('2d');
-            canvas.width = 256; canvas.height = 64;
-            ctx.fillStyle = player.isFrontMan ? '#ffb700' : '#ffffff';
-            ctx.font = 'Bold 28px Arial';
+            ctx.fillStyle = 'rgba(0,0,0,0)'; ctx.fillRect(0, 0, 256, 128);
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'Bold 42px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText(player.isFrontMan ? "VIP / Front Man" : `${player.name} (${player.number})`, 128, 40);
+            ctx.fillText(`${player.number}`, 128, 75);
 
-            const texture = new THREE.CanvasTexture(canvas);
-            const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: texture }));
-            sprite.position.y = 2.1; sprite.scale.set(3, 0.75, 1);
-            group.add(sprite);
+            const numTex = new THREE.CanvasTexture(canvas);
+            const numSpriteFront = new THREE.Sprite(new THREE.SpriteMaterial({ map: numTex }));
+            numSpriteFront.position.set(0, 0.95, 0.21);
+            numSpriteFront.scale.set(0.6, 0.3, 1);
+            group.add(numSpriteFront);
+
+            // اسم اللاعب أعلى الرأس
+            const nameCanvas = document.createElement('canvas');
+            const nCtx = nameCanvas.getContext('2d');
+            nameCanvas.width = 256; nameCanvas.height = 64;
+            nCtx.fillStyle = '#ffffff'; nCtx.font = 'Bold 28px Arial'; nCtx.textAlign = 'center';
+            nCtx.fillText(`${player.name}`, 128, 40);
+
+            const nameTex = new THREE.CanvasTexture(nameCanvas);
+            const nameSprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: nameTex }));
+            nameSprite.position.y = 2.05; nameSprite.scale.set(2.5, 0.6, 1);
+            group.add(nameSprite);
 
             scene.add(group);
             otherPlayers[player.id] = group;
@@ -410,7 +522,6 @@
                 if(e.code === 'KeyD') keys.d = false;
             });
 
-            // التلتفت والرؤية الكاملة 360° (فوق وجوة ويمنى ويسرى)
             let isTouching = false, lastX = 0, lastY = 0;
             window.addEventListener('touchstart', (e) => {
                 if(isEditHudMode || e.target.closest('.movable-element') || e.target.closest('#settingsMenu')) return;
@@ -474,12 +585,23 @@
                 knob.style.top = `${34 + Math.sin(angle) * dist}px`;
 
                 const speed = (isSprinting ? 0.22 : 0.1);
-                camera.translateX((Math.cos(angle) * dist / 35) * speed);
-                camera.translateZ((Math.sin(angle) * dist / 35) * speed);
+                moveCameraWithCollision((Math.cos(angle) * dist / 35) * speed, (Math.sin(angle) * dist / 35) * speed);
             });
         }
 
-        // السحب والتحريك الحر لأي عنصر في الواجهة
+        // نظام الحركة المانع للخروج واختراق الجدران
+        function moveCameraWithCollision(translateX, translateZ) {
+            const oldX = camera.position.x;
+            const oldZ = camera.position.z;
+
+            camera.translateX(translateX);
+            camera.translateZ(translateZ);
+
+            // حدود الساحة الفيزيائية يمنع الخروج خارج (-38 إلى 38)
+            camera.position.x = Math.max(-37.5, Math.min(37.5, camera.position.x));
+            camera.position.z = Math.max(-37.5, Math.min(37.5, camera.position.z));
+        }
+
         function enableCustomHud() {
             isEditHudMode = true;
             if(document.exitPointerLock) document.exitPointerLock();
@@ -517,12 +639,12 @@
                 hudData[el.id] = { left: el.style.left, top: el.style.top };
             });
 
-            localStorage.setItem('sg_custom_hud_v3', JSON.stringify(hudData));
+            localStorage.setItem('sg_custom_hud_v4', JSON.stringify(hudData));
             alert("تم حفظ توزيع الأزرار بنجاح!");
         }
 
         function loadCustomHud() {
-            const saved = localStorage.getItem('sg_custom_hud_v3');
+            const saved = localStorage.getItem('sg_custom_hud_v4');
             if(saved) {
                 const hudData = JSON.parse(saved);
                 Object.keys(hudData).forEach(id => {
@@ -536,7 +658,6 @@
             }
         }
 
-        // بث المايك واستقبال الصوت
         async function toggleMic() {
             const micBtn = document.getElementById('micBtn');
             if(!isMicOn) {
@@ -591,7 +712,7 @@
             else if(data.action === 'stop') { audio.pause(); audio.currentTime = 0; }
         });
 
-        function doJump() { if(!isEditHudMode) { camera.position.y = 2.5; setTimeout(() => camera.position.y = 1.7, 300); } }
+        function doJump() { if(!isEditHudMode) { camera.position.y = 2.6; setTimeout(() => camera.position.y = 1.8, 300); } }
         function toggleSprint() { if(!isEditHudMode) isSprinting = !isSprinting; }
         function doPunch() { if(!isEditHudMode) socket.emit('playerPunch', Object.keys(otherPlayers)[0]); }
 
@@ -600,10 +721,10 @@
 
             if(!isEditHudMode) {
                 const speed = isSprinting ? 0.22 : 0.1;
-                if(keys.w) camera.translateZ(-speed);
-                if(keys.s) camera.translateZ(speed);
-                if(keys.a) camera.translateX(-speed);
-                if(keys.d) camera.translateX(speed);
+                if(keys.w) moveCameraWithCollision(0, -speed);
+                if(keys.s) moveCameraWithCollision(0, speed);
+                if(keys.a) moveCameraWithCollision(-speed, 0);
+                if(keys.d) moveCameraWithCollision(speed, 0);
             }
 
             if(renderer && scene && camera) {
