@@ -154,10 +154,10 @@
                             e.data.arrayBuffer().then(buffer => socket.emit('adminAudioStream', buffer));
                         }
                     };
-                    mediaRecorder.start(300); // إرسال كتل كل 300 مللي ثانية لسلاسة الصوت
+                    mediaRecorder.start(200);
                     isMicOn = true;
                     btn.innerText = "إيقاف المايك 🔴";
-                    status.innerText = "🔴 المايك يبث حي وبدون انقطاع للجميع";
+                    status.innerText = "🔴 المايك يبث حي للجميع";
                 } catch(err) { alert("يرجى إعطاء صلاحية المايك من المتصفح!"); }
             } else {
                 if(mediaRecorder) mediaRecorder.stop();
