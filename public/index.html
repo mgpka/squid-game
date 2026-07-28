@@ -222,40 +222,46 @@
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0a0d12);
 
-            camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.rotation.order = 'YXZ';
-            camera.position.set(0, PLAYER_EYE_HEIGHT, 5);
+            // تعديل مكان الكاميرا لتبعد عن مركز الـ 0 وتكون بوضع آمن
+            camera.position.set(0, 5, 15);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            const ambientLight = new THREE.AmbientLight(0xffffff, 1.5);
+            // إضاءة قوية وشاملة لمنع ظهور شاشة مظلمة أو رمادية
+            const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
             scene.add(ambientLight);
 
-            const sunLight = new THREE.DirectionalLight(0xffffff, 2.0);
-            sunLight.position.set(0, 50, 20);
+            const sunLight = new THREE.DirectionalLight(0xffffff, 2.5);
+            sunLight.position.set(10, 50, 20);
             scene.add(sunLight);
+
+            // شبكة أرضية مؤقتة كضمان لظهور شيء بالعين حتى لو تأخر تحميل الملف
+            const gridHelper = new THREE.GridHelper(50, 50, 0xff0055, 0x444444);
+            gridHelper.position.y = 0;
+            scene.add(gridHelper);
 
             loadLobbyModel();
             animate();
         }
 
-        // استخدام الرابط المباشر الثابت والمضمون للوبي 3D لتجنب مشاكل الشاشة السوداء والحجم
+        // تحميل اللوبي من الرابط المباشر الثابت مع معالجة الأخطاء
         function loadLobbyModel() {
             const loader = new THREE.GLTFLoader();
             loader.load('https://files.catbox.moe/cb829z.glb', (gltf) => {
                 const lobbyModel = gltf.scene;
                 
-                const box = new THREE.Box3().setFromObject(lobbyModel);
-                const size = box.getSize(new THREE.Vector3());
-                const maxDim = Math.max(size.x, size.y, size.z);
-                
-                if (maxDim > 50) {
-                    const scaleFactor = 30 / maxDim;
-                    lobbyModel.scale.set(scaleFactor, scaleFactor, scaleFactor);
-                }
+                // تعديل الخامات والإضاءة للموديل
+                lobbyModel.traverse((child) => {
+                    if (child.isMesh) {
+                        child.castShadow = true;
+                        child.receiveShadow = true;
+                    }
+                });
 
                 lobbyModel.position.set(0, 0, 0);
                 scene.add(lobbyModel);
