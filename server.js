@@ -48,6 +48,7 @@ io.on('connection', (socket) => {
             isFrontMan: data.isFrontMan || false,
             x: 0, y: 1.6, z: 10,
             rotationY: 0,
+            rotationX: 0,
             health: 100
         };
 
@@ -63,11 +64,12 @@ io.on('connection', (socket) => {
             gameState.players[socket.id].y = data.y;
             gameState.players[socket.id].z = data.z;
             gameState.players[socket.id].rotationY = data.rotationY;
+            gameState.players[socket.id].rotationX = data.rotationX;
             socket.broadcast.emit('playerMoved', gameState.players[socket.id]);
         }
     });
 
-    // بث مايك الأدمن المباشر للجميع
+    // بث مايك المسؤول
     socket.on('adminAudioStream', (audioBuffer) => {
         socket.broadcast.emit('receiveAdminVoice', audioBuffer);
     });
@@ -79,7 +81,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    // بث الصوت والموسيقى من لوحة الـ Admin
+    // بث الأغاني والموسيقى
     socket.on('adminMusicControl', (data) => {
         io.emit('syncMusic', data);
     });
