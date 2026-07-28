@@ -9,13 +9,8 @@ const io = new Server(server, { cors: { origin: "*" } });
 
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get('/admin.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
-});
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/admin.html', (req, res) => res.sendFile(path.join(__dirname, 'public', 'admin.html')));
 
 let gameState = {
     isStarted: false,
@@ -29,16 +24,14 @@ let gameState = {
 const ADMIN_PASSWORD = "admin123";
 
 io.on('connection', (socket) => {
-    console.log(`متصل جديد: ${socket.id}`);
 
-    // التحقق من رمز الغرفة ورقم اللاعب
     socket.on('verifyJoin', (data, callback) => {
         if (data.pass !== gameState.roomPass) {
             return callback({ success: false, message: 'رمز الدخول خاطئ!' });
         }
         
         const isNumTaken = Object.values(gameState.players).some(p => p.number === data.number && p.id !== socket.id);
-        if (isNumTaken) {
+        if (isNumTaken && !data.isFrontMan) {
             return callback({ success: false, message: 'هذا الرقم مستخدم حالياً من قبل لاعب آخر!' });
         }
 
@@ -48,18 +41,17 @@ io.on('connection', (socket) => {
             number: data.number,
             gender: data.gender || 'male',
             isFrontMan: data.isFrontMan || false,
-            x: 0, y: 1.6, z: 0,
+            x: 0, y: 1.6, z: 12,
             rotationY: 0,
             health: 100
         };
 
         callback({ success: true });
         socket.broadcast.emit('newPlayerJoined', gameState.players[socket.id]);
-        io.emit('updatePlayerCount', Object.keys(gameState.players).length);
+        io.emit('updatePlayerList', Object.values(gameState.players));
         socket.emit('currentPlayers', gameState.players);
     });
 
-    // تحديث حركة اللاعب
     socket.on('playerMove', (data) => {
         if (gameState.players[socket.id]) {
             gameState.players[socket.id].x = data.x;
@@ -70,21 +62,46 @@ io.on('connection', (socket) => {
         }
     });
 
-    // ضرب اللاعبين (Punch / PvP)
-    socket.on('playerPunch', (targetId) => {
-        if (gameState.pvpEnabled && gameState.players[targetId]) {
-            gameState.players[targetId].health -= 20;
-            io.emit('playerHit', { id: targetId, health: gameState.players[targetId].health });
+    // بث مايك المسؤول Admin
+    socket.on('adminAudioStream', (audioChunk) => {
+        socket.broadcast.emit('receiveAdminVoice', audioChunk);
+    });
+
+    // بث مايك اللاعبين
+    socket.on('playerVoiceStream', (audioChunk) => {
+        if(!gameState.globalMute) {
+            socket.broadcast.emit('receivePlayerVoice', audioChunk);
         }
     });
 
-    // لوحة التحكم Admin
+    // بث الموسيقى من لوحة التحكم
+    socket.on('adminMusicControl', (data) => {
+        io.emit('syncMusic', data);
+    });
+
     socket.on('adminLogin', (pass, callback) => {
         if (pass === ADMIN_PASSWORD) {
             socket.join('admin-room');
-            callback({ success: true, roomPass: gameState.roomPass });
+            callback({ success: true, roomPass: gameState.roomPass, players: Object.values(gameState.players) });
         } else {
             callback({ success: false, message: 'كلمة السر خاطئة' });
+        }
+    });
+
+    socket.on('adminKickPlayer', (targetSocketId) => {
+        if (io.sockets.sockets.get(targetSocketId)) {
+            io.to(targetSocketId).emit('kickedFromGame');
+            delete gameState.players[targetSocketId];
+            io.emit('playerDisconnected', targetSocketId);
+            io.emit('updatePlayerList', Object.values(gameState.players));
+        }
+    });
+
+    socket.on('adminEditPlayer', (data) => {
+        if (gameState.players[data.id]) {
+            gameState.players[data.id].name = data.name;
+            gameState.players[data.id].number = data.number;
+            io.emit('updatePlayerList', Object.values(gameState.players));
         }
     });
 
@@ -118,18 +135,10 @@ io.on('connection', (socket) => {
         }, 1000);
     });
 
-    socket.on('adminAudioStream', (audioChunk) => {
-        socket.broadcast.emit('receiveAdminVoice', audioChunk);
-    });
-
-    socket.on('adminMusicControl', (data) => {
-        io.emit('syncMusic', data);
-    });
-
     socket.on('disconnect', () => {
         delete gameState.players[socket.id];
         io.emit('playerDisconnected', socket.id);
-        io.emit('updatePlayerCount', Object.keys(gameState.players).length);
+        io.emit('updatePlayerList', Object.values(gameState.players));
     });
 });
 
