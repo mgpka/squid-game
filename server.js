@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
-// حد نقل البيانات 100MB لدعم المايك والأغاني بدقة بدون انقطاع
+// حد نقل بيانات 100MB لدعم المايك والأغاني بدقة بدون انقطاع
 const io = new Server(server, {
     maxHttpBufferSize: 1e8,
     cors: { origin: "*" }
@@ -29,7 +29,8 @@ let gameState = {
 const ADMIN_PASSWORD = "admin123";
 
 io.on('connection', (socket) => {
-
+    
+    // التحقق من الانضمام والغرفة
     socket.on('verifyJoin', (data, callback) => {
         if (data.pass !== gameState.roomPass) {
             return callback({ success: false, message: 'رمز الدخول خاطئ!' });
@@ -58,6 +59,7 @@ io.on('connection', (socket) => {
         socket.emit('currentPlayers', gameState.players);
     });
 
+    // حركة اللاعبين في الـ 3D
     socket.on('playerMove', (data) => {
         if (gameState.players[socket.id]) {
             gameState.players[socket.id].x = data.x;
@@ -69,18 +71,21 @@ io.on('connection', (socket) => {
         }
     });
 
-    // بث المايك والموسيقى
+    // الصوت والمايك والموسيقى
     socket.on('adminAudioStream', (audioBuffer) => socket.broadcast.emit('receiveAdminVoice', audioBuffer));
     socket.on('playerVoiceStream', (audioBuffer) => {
         if(!gameState.globalMute) socket.broadcast.emit('receivePlayerVoice', { id: socket.id, buffer: audioBuffer });
     });
     socket.on('adminMusicControl', (data) => io.emit('syncMusic', data));
 
+    // لوحة التحكم وصلاحيات الأدمن
     socket.on('adminLogin', (pass, callback) => {
         if (pass === ADMIN_PASSWORD) {
             socket.join('admin-room');
             callback({ success: true, roomPass: gameState.roomPass, players: Object.values(gameState.players) });
-        } else callback({ success: false, message: 'كلمة السر خاطئة' });
+        } else {
+            callback({ success: false, message: 'كلمة السر خاطئة' });
+        }
     });
 
     socket.on('adminKickPlayer', (targetSocketId) => {
