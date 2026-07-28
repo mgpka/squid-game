@@ -78,7 +78,7 @@
     <div id="hud">
         <div id="topStats">
             <div id="playerCountDisplay">1/30</div>
-            <div id="gameStatusText" style="font-size:16px; color:#ffffff; font-weight:bold;">Waiting for more players.<br>Game starts soon</div>
+            <div id="gameStatusText" style="font-size:16px; color:#00ffcc; font-weight:bold;">جاري تحميل ملف اللوبي (79MB)... يرجى الانتظار</div>
         </div>
 
         <div id="topRightControls" class="movable-element">
@@ -224,7 +224,6 @@
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.rotation.order = 'YXZ';
-            // تعديل مكان الكاميرا لتبعد عن مركز الـ 0 وتكون بوضع آمن
             camera.position.set(0, 5, 15);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -232,7 +231,6 @@
             renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
 
-            // إضاءة قوية وشاملة لمنع ظهور شاشة مظلمة أو رمادية
             const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
             scene.add(ambientLight);
 
@@ -240,7 +238,6 @@
             sunLight.position.set(10, 50, 20);
             scene.add(sunLight);
 
-            // شبكة أرضية مؤقتة كضمان لظهور شيء بالعين حتى لو تأخر تحميل الملف
             const gridHelper = new THREE.GridHelper(50, 50, 0xff0055, 0x444444);
             gridHelper.position.y = 0;
             scene.add(gridHelper);
@@ -249,13 +246,14 @@
             animate();
         }
 
-        // تحميل اللوبي من الرابط المباشر الثابت مع معالجة الأخطاء
+        // تحميل اللوبي مع إظهار نسبة التحميل أو الخطأ مباشرة على الشاشة
         function loadLobbyModel() {
             const loader = new THREE.GLTFLoader();
+            const statusText = document.getElementById('gameStatusText');
+
             loader.load('https://files.catbox.moe/cb829z.glb', (gltf) => {
                 const lobbyModel = gltf.scene;
                 
-                // تعديل الخامات والإضاءة للموديل
                 lobbyModel.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
@@ -265,11 +263,19 @@
 
                 lobbyModel.position.set(0, 0, 0);
                 scene.add(lobbyModel);
-                console.log('✅ تم تحميل اللوبي الثلاثي الأبعاد بنجاح تام!');
+                statusText.innerText = "✅ تم تحميل اللوبي بنجاح!";
+                statusText.style.color = "#00ffcc";
             }, (xhr) => {
-                console.log('نسبة التحميل: ' + (xhr.loaded / xhr.total * 100) + '%');
+                if (xhr.total > 0) {
+                    const percent = Math.floor((xhr.loaded / xhr.total) * 100);
+                    statusText.innerText = `جاري تحميل اللوبي: ${percent}%`;
+                } else {
+                    statusText.innerText = `جاري التحميل: ${(xhr.loaded / (1024*1024)).toFixed(1)} MB`;
+                }
             }, (err) => {
-                console.error("❌ خطأ في تحميل اللوبي:", err);
+                console.error("خطأ التحميل:", err);
+                statusText.innerText = "❌ خطأ في تحميل الملف (تحقق من الاتصال أو الرابط)";
+                statusText.style.color = "#ff4444";
             });
         }
 
