@@ -6,7 +6,7 @@ const path = require('path');
 const app = express();
 const server = http.createServer(app);
 
-// زيادة حجم استقبال البيانات لـ 100MB لمنع انقطاع الصوت والأغاني
+// حد نقل البيانات 100MB لدعم المايك والأغاني بدقة بدون انقطاع
 const io = new Server(server, {
     maxHttpBufferSize: 1e8,
     cors: { origin: "*" }
@@ -69,30 +69,18 @@ io.on('connection', (socket) => {
         }
     });
 
-    // بث مايك المسؤول
-    socket.on('adminAudioStream', (audioBuffer) => {
-        socket.broadcast.emit('receiveAdminVoice', audioBuffer);
-    });
-
-    // بث مايك اللاعبين
+    // بث المايك والموسيقى
+    socket.on('adminAudioStream', (audioBuffer) => socket.broadcast.emit('receiveAdminVoice', audioBuffer));
     socket.on('playerVoiceStream', (audioBuffer) => {
-        if(!gameState.globalMute) {
-            socket.broadcast.emit('receivePlayerVoice', { id: socket.id, buffer: audioBuffer });
-        }
+        if(!gameState.globalMute) socket.broadcast.emit('receivePlayerVoice', { id: socket.id, buffer: audioBuffer });
     });
-
-    // بث الأغاني والموسيقى
-    socket.on('adminMusicControl', (data) => {
-        io.emit('syncMusic', data);
-    });
+    socket.on('adminMusicControl', (data) => io.emit('syncMusic', data));
 
     socket.on('adminLogin', (pass, callback) => {
         if (pass === ADMIN_PASSWORD) {
             socket.join('admin-room');
             callback({ success: true, roomPass: gameState.roomPass, players: Object.values(gameState.players) });
-        } else {
-            callback({ success: false, message: 'كلمة السر خاطئة' });
-        }
+        } else callback({ success: false, message: 'كلمة السر خاطئة' });
     });
 
     socket.on('adminKickPlayer', (targetSocketId) => {
