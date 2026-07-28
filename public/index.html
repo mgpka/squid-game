@@ -50,7 +50,6 @@
         #crosshair { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: white; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -243,17 +242,12 @@
             animate();
         }
 
-        // كود معالجة وتصغير وتحجيم اللوبي تلقائياً ليظهر أمام الكاميرا بوضوح
+        // استخدام الرابط المباشر الثابت والمضمون للوبي 3D لتجنب مشاكل الشاشة السوداء والحجم
         function loadLobbyModel() {
             const loader = new THREE.GLTFLoader();
-            const dracoLoader = new THREE.DRACOLoader();
-            dracoLoader.setDecoderPath('https://www.gstatic.com/draco/versioned/decoders/1.5.6/');
-            loader.setDRACOLoader(dracoLoader);
-
-            loader.load('lobby.glb', (gltf) => {
+            loader.load('https://files.catbox.moe/cb829z.glb', (gltf) => {
                 const lobbyModel = gltf.scene;
                 
-                // حساب الحجم الحقيقي وتعديل السكيل تلقائياً
                 const box = new THREE.Box3().setFromObject(lobbyModel);
                 const size = box.getSize(new THREE.Vector3());
                 const maxDim = Math.max(size.x, size.y, size.z);
@@ -265,8 +259,11 @@
 
                 lobbyModel.position.set(0, 0, 0);
                 scene.add(lobbyModel);
-            }, undefined, (err) => {
-                console.error("خطأ في تحميل اللوبي:", err);
+                console.log('✅ تم تحميل اللوبي الثلاثي الأبعاد بنجاح تام!');
+            }, (xhr) => {
+                console.log('نسبة التحميل: ' + (xhr.loaded / xhr.total * 100) + '%');
+            }, (err) => {
+                console.error("❌ خطأ في تحميل اللوبي:", err);
             });
         }
 
