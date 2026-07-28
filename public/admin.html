@@ -8,11 +8,14 @@
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f0f15; color: #fff; margin: 20px; }
         .card { background: #181824; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #2a2a3d; }
         h2 { color: #ff0055; border-bottom: 2px solid #ff0055; padding-bottom: 5px; margin-top: 0; }
-        button { background: #ff0055; color: #fff; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; margin: 5px; font-weight: bold; }
+        button { background: #ff0055; color: #fff; border: none; padding: 10px 18px; font-size: 14px; border-radius: 6px; cursor: pointer; margin: 4px; font-weight: bold; }
         button:hover { background: #d40045; }
         button.gold { background: #ffb700; color: #000; }
-        button.gold:hover { background: #e0a200; }
-        input[type="file"], input[type="password"], input[type="text"] { padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: #fff; margin: 5px; }
+        button.danger { background: #cc0000; }
+        input[type="file"], input[type="password"], input[type="text"] { padding: 8px; border-radius: 5px; border: 1px solid #444; background: #222; color: #fff; margin: 3px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: center; }
+        th { background: #ff0055; }
         .status { font-weight: bold; color: #00ffcc; margin-right: 10px; }
     </style>
 </head>
@@ -26,7 +29,38 @@
         <button onclick="login()">دخول</button>
     </div>
 
-    <!-- إدارة الرمز واللعبة -->
+    <div class="card" id="playersCard" style="display:none;">
+        <h2>👥 قائمة اللاعبين المتصلين</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>الاسم</th>
+                    <th>الرقم</th>
+                    <th>الجنس</th>
+                    <th>النوع</th>
+                    <th>الإجراءات</th>
+                </tr>
+            </thead>
+            <tbody id="playersTableBody"></tbody>
+        </table>
+    </div>
+
+    <div class="card" id="micCard" style="display:none;">
+        <h2>🎙️ بث المايك المباشر (Broadcast Voice)</h2>
+        <p>تحدث مباشرة مع جميع اللاعبين في الساحة:</p>
+        <button id="micBtn" onclick="toggleMic()">تشغيل المايك للمسؤول 🎙️</button>
+        <span class="status" id="micStatus">المايك مغلق</span>
+    </div>
+
+    <div class="card" id="musicCard" style="display:none;">
+        <h2>🎵 مشغل الموسيقى (DJ Control)</h2>
+        <input type="file" id="audioFile" accept="audio/*" onchange="loadAudio(event)"><br><br>
+        <label><input type="checkbox" id="loopCheck" checked> تكرار تلقائي (Loop)</label><br><br>
+        <button onclick="sendMusicAction('play')">تشغيل أونلاين للجميع ▶️</button>
+        <button onclick="sendMusicAction('pause')">إيقاف مؤقت ⏸️</button>
+        <button onclick="sendMusicAction('stop')">إيقاف نهائي ⏹️</button>
+    </div>
+
     <div class="card" id="roomCard" style="display:none;">
         <h2>🔐 إدارة رمز الدخول للبطولة</h2>
         <p>الرمز الحالي: <span class="status" id="currentPass">sqpr</span></p>
@@ -34,44 +68,24 @@
         <button onclick="changeRoomPass()">تغيير الرمز</button>
     </div>
 
-    <!-- دخول المسؤول بشخصية Front Man -->
     <div class="card" id="frontManCard" style="display:none;">
         <h2>🎭 النزول المباشر بشخصية Front Man</h2>
-        <p>يمكنك النزول وسط اللاعبين بشخصية القائد المتميزة للحديث والتفاعل معهم!</p>
         <button class="gold" onclick="joinAsFrontMan()">النزول للساحة كـ Front Man 👑</button>
     </div>
 
-    <!-- التحكم بالحظر والكتم والضرب -->
     <div class="card" id="controlCard" style="display:none;">
-        <h2>⚔️ إعدادات المواجهة والكتم</h2>
+        <h2>⚔️ إعدادات المواجهة والبدء</h2>
         <button id="pvpBtn" onclick="togglePvP()">تفعيل دمج الضرب (PvP: OFF)</button>
         <button id="muteBtn" onclick="toggleGlobalMute()">كتم المايكات إجبارياً (Mute All: OFF)</button>
         <br><br>
         <button onclick="startGame(10)">بدء العد التنازلي للعبة (10 ثواني)</button>
-        <span class="status" id="gameStatus">في انتظار البدء...</span>
-    </div>
-
-    <!-- بث المايك المباشر -->
-    <div class="card" id="micCard" style="display:none;">
-        <h2>🎙️ المايك المباشر للمسؤول (Broadcast Voice)</h2>
-        <button id="micBtn" onclick="toggleMic()">تشغيل المايك المباشر</button>
-        <span class="status" id="micStatus">المايك مغلق</span>
-    </div>
-
-    <!-- مشغل الموسيقى -->
-    <div class="card" id="musicCard" style="display:none;">
-        <h2>🎵 مشغل الموسيقى (DJ Control)</h2>
-        <input type="file" id="audioFile" accept="audio/*" onchange="loadAudio(event)"><br><br>
-        <label><input type="checkbox" id="loopCheck" checked> تكرار تلقائي (Loop)</label><br><br>
-        <button onclick="sendMusicAction('play')">تشغيل للجميع</button>
-        <button onclick="sendMusicAction('pause')">إيقاف مؤقت</button>
-        <button onclick="sendMusicAction('stop')">إيقاف نهائي</button>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
-        let isMicOn = false, mediaRecorder, audioDataBuffer = null;
+        let isMicOn = false, mediaRecorder = null, localStream = null;
+        let audioDataBuffer = null;
         let isPvP = false, isMuted = false;
 
         function login() {
@@ -79,81 +93,101 @@
             socket.emit('adminLogin', pass, (res) => {
                 if(res.success) {
                     document.getElementById('loginCard').style.display = 'none';
+                    document.getElementById('playersCard').style.display = 'block';
+                    document.getElementById('micCard').style.display = 'block';
+                    document.getElementById('musicCard').style.display = 'block';
                     document.getElementById('roomCard').style.display = 'block';
                     document.getElementById('frontManCard').style.display = 'block';
                     document.getElementById('controlCard').style.display = 'block';
-                    document.getElementById('micCard').style.display = 'block';
-                    document.getElementById('musicCard').style.display = 'block';
                     document.getElementById('currentPass').innerText = res.roomPass;
-                } else {
-                    alert(res.message);
-                }
+                    renderPlayers(res.players);
+                } else { alert(res.message); }
             });
+        }
+
+        function renderPlayers(players) {
+            const tbody = document.getElementById('playersTableBody');
+            tbody.innerHTML = '';
+            players.forEach(p => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${p.name}</td>
+                        <td>${p.number}</td>
+                        <td>${p.gender === 'female' ? 'بنت ♀' : 'ذكر ♂'}</td>
+                        <td>${p.isFrontMan ? 'Front Man 👑' : 'لاعب'}</td>
+                        <td>
+                            <button onclick="editPlayer('${p.id}', '${p.name}', ${p.number})">تعديل</button>
+                            <button class="danger" onclick="kickPlayer('${p.id}')">إقصاء</button>
+                        </td>
+                    </tr>
+                `;
+            });
+        }
+
+        function kickPlayer(id) {
+            if(confirm("طرد هذا اللاعب؟")) socket.emit('adminKickPlayer', id);
+        }
+
+        function editPlayer(id, curName, curNum) {
+            const newName = prompt("الاسم الجديد:", curName);
+            const newNum = prompt("الرقم الجديد:", curNum);
+            if(newName && newNum) socket.emit('adminEditPlayer', { id, name: newName, number: parseInt(newNum) });
         }
 
         function changeRoomPass() {
             const newP = document.getElementById('newPassInput').value;
-            if(newP) {
-                socket.emit('adminChangePass', newP);
-                document.getElementById('currentPass').innerText = newP;
-                alert("تم تغيير رمز البطولة بنجاح!");
-            }
+            if(newP) { socket.emit('adminChangePass', newP); alert("تم التغيير!"); }
         }
 
-        function joinAsFrontMan() {
-            window.open('/?role=frontman', '_blank');
-        }
+        function joinAsFrontMan() { window.open('/?role=frontman', '_blank'); }
+        function togglePvP() { isPvP = !isPvP; socket.emit('adminTogglePvP', isPvP); }
+        function toggleGlobalMute() { isMuted = !isMuted; socket.emit('adminToggleGlobalMute', isMuted); }
+        function startGame(sec) { socket.emit('adminStartGame', sec); }
 
-        function togglePvP() {
-            isPvP = !isPvP;
-            socket.emit('adminTogglePvP', isPvP);
-            document.getElementById('pvpBtn').innerText = `تفعيل دمج الضرب (PvP: ${isPvP ? 'ON 🟢' : 'OFF 🔴'})`;
-        }
-
-        function toggleGlobalMute() {
-            isMuted = !isMuted;
-            socket.emit('adminToggleGlobalMute', isMuted);
-            document.getElementById('muteBtn').innerText = `كتم المايكات إجبارياً (Mute All: ${isMuted ? 'ON 🔴' : 'OFF 🟢'})`;
-        }
-
-        function startGame(sec) {
-            socket.emit('adminStartGame', sec);
-            document.getElementById('gameStatus').innerText = "تم إرسال أمر البدء!";
-        }
-
+        // تشغيل مايك المسؤول
         async function toggleMic() {
+            const btn = document.getElementById('micBtn');
+            const status = document.getElementById('micStatus');
             if (!isMicOn) {
                 try {
-                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(stream);
-                    mediaRecorder.ondataavailable = e => socket.emit('adminAudioStream', e.data);
+                    localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(localStream, { mimeType: 'audio/webm' });
+                    mediaRecorder.ondataavailable = (e) => {
+                        if(e.data.size > 0) socket.emit('adminAudioStream', e.data);
+                    };
                     mediaRecorder.start(100);
                     isMicOn = true;
-                    document.getElementById('micBtn').innerText = "إيقاف المايك";
-                    document.getElementById('micStatus').innerText = "🔴 المايك يبث حي الآن للجميع";
-                } catch (err) { alert("يرجى تفعيل إذن المايك"); }
+                    btn.innerText = "إيقاف المايك 🔴";
+                    status.innerText = "🔴 المايك يبث حي لجميع اللاعبين الآن";
+                } catch(err) { alert("يرجى إعطاء صلاحية استخدام المايك!"); }
             } else {
-                mediaRecorder.stop();
+                if(mediaRecorder) mediaRecorder.stop();
+                if(localStream) localStream.getTracks().forEach(t => t.stop());
                 isMicOn = false;
-                document.getElementById('micBtn').innerText = "تشغيل المايك المباشر";
-                document.getElementById('micStatus').innerText = "المايك مغلق";
+                btn.innerText = "تشغيل المايك للمسؤول 🎙️";
+                status.innerText = "المايك مغلق";
             }
         }
 
-        function loadAudio(event) {
-            const file = event.target.files[0];
+        // تشغيل الموسيقى أونلاين
+        function loadAudio(e) {
+            const file = e.target.files[0];
+            if(!file) return;
             const reader = new FileReader();
-            reader.onload = e => audioDataBuffer = e.target.result;
+            reader.onload = ev => audioDataBuffer = ev.target.result;
             reader.readAsDataURL(file);
         }
 
         function sendMusicAction(action) {
+            if(action === 'play' && !audioDataBuffer) return alert("يرجى اختيار ملف صوتي أولاً!");
             socket.emit('adminMusicControl', {
                 action: action,
                 audioData: audioDataBuffer,
                 loop: document.getElementById('loopCheck').checked
             });
         }
+
+        socket.on('updatePlayerList', players => renderPlayers(players));
     </script>
 </body>
 </html>
