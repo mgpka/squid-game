@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Squid Game FPP | لعبة الحبار</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: sans-serif; }
+        #lobby { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 10; }
+        #lobby input { padding: 12px; font-size: 18px; border-radius: 5px; border: none; margin-bottom: 15px; text-align: center; }
+        #lobby button { padding: 12px 30px; font-size: 20px; background: #ff0055; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        #hud { position: absolute; top: 20px; right: 20px; color: #fff; font-size: 24px; font-weight: bold; text-shadow: 2px 2px 4px #000; z-index: 5; display: none; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 10px; height: 10px; background: white; border-radius: 50%; transform: translate(-50%, -50%); z-index: 5; pointer-events: none; display: none; }
+    </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+
+    <div id="lobby">
+        <h1>SQUID GAME FPP</h1>
+        <p>أدخل اسمك أو رقمك للدخول للبطولة:</p>
+        <input type="text" id="playerName" placeholder="مثلاً: Player 456">
+        <button onclick="joinGame()">دخول الساحه</button>
+    </div>
+
+    <div id="hud">
+        <div>اللاعب: <span id="displayNum">456</span></div>
+        <div id="statusText">في انتظار بدء المسؤول...</div>
+    </div>
+    <div id="crosshair"></div>
+
+    <audio id="bgMusic" loop></audio>
+
+    <script>
+        const socket = io();
+        let scene, camera, renderer;
+
+        function joinGame() {
+            const name = document.getElementById('playerName').value || "Player " + Math.floor(Math.random() * 900 + 100);
+            document.getElementById('displayNum').innerText = name;
+            document.getElementById('lobby').style.display = 'none';
+            document.getElementById('hud').style.display = 'block';
+            document.getElementById('crosshair').style.display = 'block';
+
+            init3D();
+        }
+
+        function init3D() {
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0x87ceeb);
+
+            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+            camera.position.set(0, 1.6, 0);
+
+            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            const light = new THREE.DirectionalLight(0xffffff, 1);
+            light.position.set(0, 20, 10);
+            scene.add(light);
+
+            const floorGeo = new THREE.PlaneGeometry(100, 200);
+            const floorMat = new THREE.MeshBasicMaterial({ color: 0xd2b48c, side: THREE.DoubleSide });
+            const floor = new THREE.Mesh(floorGeo, floorMat);
+            floor.rotation.x = Math.PI / 2;
+            scene.add(floor);
+
+            const dollGeo = new THREE.BoxGeometry(2, 5, 2);
+            const dollMat = new THREE.MeshBasicMaterial({ color: 0xff0000 });
+            const doll = new THREE.Mesh(dollGeo, dollMat);
+            doll.position.set(0, 2.5, -90);
+            scene.add(doll);
+
+            document.addEventListener('click', () => {
+                document.body.requestPointerLock();
+            });
+
+            document.addEventListener('mousemove', (e) => {
+                if (document.pointerLockElement === document.body) {
+                    camera.rotation.y -= e.movementX * 0.002;
+                }
+            });
+
+            animate();
+        }
+
+        function animate() {
+            requestAnimationFrame(animate);
+            if(renderer && scene && camera) {
+                renderer.render(scene, camera);
+            }
+        }
+
+        socket.on('gameStarting', (data) => {
+            document.getElementById('statusText').innerText = "العد التنازلي: " + data.countdown;
+        });
+
+        socket.on('countdownTick', (time) => {
+            document.getElementById('statusText').innerText = "العد التنازلي: " + time;
+        });
+
+        socket.on('gameStarted', () => {
+            document.getElementById('statusText').innerText = "انطلقت اللعبة!";
+        });
+
+        socket.on('syncMusic', (data) => {
+            const audio = document.getElementById('bgMusic');
+            if(data.action === 'play' && data.audioData) {
+                audio.src = data.audioData;
+                audio.loop = data.loop;
+                audio.play();
+            } else if(data.action === 'pause') {
+                audio.pause();
+            } else if(data.action === 'stop') {
+                audio.pause();
+                audio.currentTime = 0;
+            }
+        });
+
+        socket.on('receiveAdminVoice', (chunk) => {
+            const blob = new Blob([chunk], { type: 'audio/webm' });
+            const audioURL = URL.createObjectURL(blob);
+            const audio = new Audio(audioURL);
+            audio.play();
+        });
+    </script>
+</body>
+</html>
