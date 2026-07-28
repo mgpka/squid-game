@@ -2,114 +2,109 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SQUID GAME AL PRINCES</title>
     <style>
-        * { box-sizing: border-box; user-select: none; }
-        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, sans-serif; }
+        * { box-sizing: border-box; user-select: none; margin: 0; padding: 0; touch-action: none; }
+        body, html { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, sans-serif; }
         
-        /* واجهة الدخول */
+        #rotateNotice { position: fixed; top:0; left:0; width:100%; height:100%; background:#000; color:#fff; display:none; flex-direction:column; justify-content:center; align-items:center; z-index:9999; text-align:center; font-size:20px; }
+
+        /* واجهة التسجيل */
         #lobbyUI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(rgba(0,0,0,0.85), rgba(0,0,0,0.95)), url('https://images.unsplash.com/photo-1634193295627-1cdddf751ebf?q=80&w=1000') center/cover; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; z-index: 100; }
-        #lobbyUI h1 { color: #ff0055; font-size: 38px; margin-bottom: 5px; text-shadow: 0 0 15px #ff0055; text-align: center; }
-        .form-group { background: rgba(20, 20, 30, 0.85); border: 1px solid #ff0055; padding: 25px; border-radius: 12px; width: 320px; display: flex; flex-direction: column; gap: 12px; text-align: right; }
-        .form-group label { font-size: 14px; color: #ccc; }
-        .form-group input, .form-group select { padding: 10px; font-size: 16px; border-radius: 6px; border: 1px solid #444; background: #111; color: white; text-align: center; }
-        .gender-box { display: flex; gap: 10px; justify-content: center; }
-        .gender-btn { flex: 1; padding: 8px; border: 1px solid #444; background: #222; color: #fff; border-radius: 6px; cursor: pointer; text-align: center; }
+        #lobbyUI h1 { color: #ff0055; font-size: 28px; margin-bottom: 10px; text-shadow: 0 0 15px #ff0055; text-align: center; font-weight: 900; }
+        .form-group { background: rgba(20, 20, 30, 0.9); border: 1px solid #ff0055; padding: 15px; border-radius: 12px; width: 300px; display: flex; flex-direction: column; gap: 8px; text-align: right; }
+        .form-group label { font-size: 12px; color: #ddd; }
+        .form-group input { padding: 8px; font-size: 14px; border-radius: 6px; border: 1px solid #444; background: #111; color: white; text-align: center; }
+        .gender-box { display: flex; gap: 10px; }
+        .gender-btn { flex: 1; padding: 6px; border: 1px solid #444; background: #222; color: #fff; border-radius: 6px; cursor: pointer; text-align: center; font-size: 13px; }
         .gender-btn.active { border-color: #ff0055; background: #ff0055; font-weight: bold; }
-        #joinBtn { padding: 12px; font-size: 18px; font-weight: bold; background: #ff0055; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 10px; }
-        
-        /* واجهة اللعب HUD */
+        #joinBtn { padding: 10px; font-size: 16px; font-weight: bold; background: #ff0055; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; }
+
+        /* HUD */
         #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: none; }
-        #topStats { position: absolute; top: 15px; width: 100%; text-align: center; color: white; font-size: 26px; font-weight: bold; text-shadow: 2px 2px 5px #000; }
+        #topStats { position: absolute; top: 10px; width: 100%; text-align: center; color: white; text-shadow: 2px 2px 4px #000; }
+        #playerCountDisplay { font-size: 28px; font-weight: 900; }
+
+        #topRightControls { position: absolute; top: 10px; right: 15px; display: flex; gap: 10px; pointer-events: auto; }
+        .hud-btn { width: 44px; height: 44px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 2px solid #fff; color: white; font-size: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; backdrop-filter: blur(4px); }
+        .hud-btn.active-green { background: #00ffcc; color: #000; border-color: #00ffcc; }
+
+        /* قائمة الإعدادات */
+        #settingsMenu { position: absolute; top: 65px; left: 15px; background: rgba(15,15,20,0.95); border: 2px solid #ff0055; padding: 15px; border-radius: 12px; color: white; width: 260px; display: none; pointer-events: auto; box-shadow: 0 10px 25px rgba(0,0,0,0.8); z-index: 500; }
+        #settingsMenu label { font-size: 12px; display: block; margin-top: 10px; color: #aaa; }
+        #settingsMenu input[type="range"] { width: 100%; margin-top: 4px; }
+        .settings-btn { width:100%; background:#ff0055; color:white; border:none; padding:8px; border-radius:6px; cursor:pointer; font-weight:bold; margin-top:10px; }
+
+        .movable-control { position: absolute; pointer-events: auto; user-select: none; }
         
-        /* أزرار الصوت أعلى اليمين */
-        #audioControls { position: absolute; top: 15px; right: 15px; display: flex; gap: 10px; pointer-events: auto; }
-        .icon-btn { width: 45px; height: 45px; border-radius: 50%; background: rgba(0,0,0,0.6); border: 2px solid #fff; color: white; font-size: 20px; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        .icon-btn.off { background: rgba(255,0,0,0.7); border-color: red; }
+        #joystickZone { bottom: 20px; left: 20px; width: 110px; height: 110px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; }
+        #joystickKnob { position: absolute; top: 33px; left: 33px; width: 44px; height: 44px; background: #ff0055; border-radius: 50%; }
 
-        /* أزرار التحكم أسفل اليمين */
-        #actionControls { position: absolute; bottom: 25px; right: 20px; display: flex; flex-direction: column; gap: 12px; pointer-events: auto; }
-        .action-btn { width: 65px; height: 65px; border-radius: 50%; background: rgba(255, 0, 85, 0.8); border: 2px solid #fff; color: white; font-size: 16px; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        .action-btn:active { transform: scale(0.9); }
+        .action-circle-btn { width: 55px; height: 55px; border-radius: 50%; background: rgba(255, 0, 85, 0.85); border: 2px solid #ffffff; color: white; font-size: 13px; font-weight: bold; display: flex; flex-direction: column; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .action-circle-btn.edit-mode { outline: 3px dashed #00ffcc; }
 
-        /* جير التحكم Joystick أسفل اليسار */
-        #joystickZone { position: absolute; bottom: 25px; left: 25px; width: 120px; height: 120px; background: rgba(255,255,255,0.15); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; pointer-events: auto; }
-        #joystickKnob { position: absolute; top: 35px; left: 35px; width: 50px; height: 50px; background: #ff0055; border-radius: 50%; }
+        #btnJump { bottom: 140px; right: 20px; }
+        #btnSprint { bottom: 80px; right: 20px; }
+        #btnPunch { bottom: 20px; right: 20px; background: #cc0000; }
 
-        /* زر الإعدادات أعلى اليسار */
-        #settingsBtn { position: absolute; top: 15px; left: 15px; pointer-events: auto; }
-        #settingsMenu { position: absolute; top: 70px; left: 15px; background: rgba(15,15,20,0.95); border: 1px solid #ff0055; padding: 15px; border-radius: 10px; color: white; width: 230px; display: none; pointer-events: auto; }
-        #settingsMenu label { font-size: 12px; display: block; margin-top: 8px; }
-        #settingsMenu input[type="range"] { width: 100%; }
+        #saveHudBtn { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); background: #00ffcc; color: #000; font-weight: bold; padding: 10px 20px; border-radius: 20px; border: none; display: none; pointer-events: auto; font-size: 16px; cursor: pointer; box-shadow: 0 0 15px #00ffcc; z-index: 600; }
 
-        #crosshair { position: absolute; top: 50%; left: 50%; width: 6px; height: 6px; background: white; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
+        #crosshair { position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; background: white; border-radius: 50%; transform: translate(-50%, -50%); pointer-events: none; }
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
 
-    <!-- واجهة التسجيل والدخول -->
+    <div id="rotateNotice">📱 يرجى تدوير الموبايل للوضع الأفقي للعب</div>
+
     <div id="lobbyUI">
         <h1>SQUID GAME AL PRINCES</h1>
         <div class="form-group">
             <label>اسم اللاعب:</label>
-            <input type="text" id="pName" placeholder="أدخل اسمك">
-            
+            <input type="text" id="pName" placeholder="اسمك">
             <label>رقم اللاعب (1 - 30):</label>
-            <input type="number" id="pNum" min="1" max="30" placeholder="مثلاً: 16">
-
-            <label>حدد جنسك:</label>
+            <input type="number" id="pNum" min="1" max="30" placeholder="16">
+            <label>الجنس:</label>
             <div class="gender-box">
                 <div class="gender-btn active" id="gMale" onclick="setGender('male')">ذكر ♂</div>
                 <div class="gender-btn" id="gFemale" onclick="setGender('female')">بنت ♀</div>
             </div>
-
-            <label>رمز الدخول للبطولة:</label>
-            <input type="text" id="pPass" placeholder="أدخل الرمز">
-
+            <label>رمز الدخول:</label>
+            <input type="text" id="pPass" placeholder="الرمز">
             <button id="joinBtn" onclick="submitJoin()">دخول الساحة</button>
         </div>
     </div>
 
-    <!-- واجهة اللعب HUD -->
     <div id="hud">
         <div id="topStats">
-            <span id="playerCountDisplay">1/30</span><br>
-            <span id="gameStatusText" style="font-size:18px; color:#ff0055;">في انتظار بدء المسؤول...</span>
+            <div id="playerCountDisplay">1/30</div>
+            <div id="gameStatusText" style="font-size:14px; color:#ff0055;">Waiting for players...</div>
         </div>
 
-        <div id="settingsBtn" class="icon-btn" onclick="toggleSettings()">⚙️</div>
+        <div id="topRightControls">
+            <div class="hud-btn" onclick="toggleSettings()">⚙️</div>
+            <div class="hud-btn" onclick="toggleFullscreen()">⛶</div>
+            <div id="speakerBtn" class="hud-btn active-green" onclick="toggleSpeaker()">🔊</div>
+            <div id="micBtn" class="hud-btn" onclick="toggleMic()">🎙️</div>
+        </div>
 
-        <!-- قائمة الإعدادات -->
         <div id="settingsMenu">
-            <h3 style="margin:0 0 10px 0; color:#ff0055;">الإعدادات</h3>
-            <label>صوت اللعبة العام:</label>
-            <input type="range" id="volMaster" min="0" max="1" step="0.1" value="1" onchange="updateVolumes()">
-            <label>صوت اللاعبين:</label>
-            <input type="range" id="volVoice" min="0" max="1" step="0.1" value="1" onchange="updateVolumes()">
-            <label>صوت الموسيقى:</label>
-            <input type="range" id="volMusic" min="0" max="1" step="0.1" value="1" onchange="updateVolumes()">
-            <br><br>
-            <button style="width:100%; background:red; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;" onclick="location.reload()">خروج من اللعبة</button>
+            <h3 style="margin:0 0 10px 0; color:#ff0055; text-align:center;">الإعدادات</h3>
+            <label>حساسية التدوير والرؤية (Sensitivity):</label>
+            <input type="range" id="sensSlider" min="1" max="10" value="5" onchange="updateSensitivity()">
+            
+            <button class="settings-btn" style="background:#00b386;" onclick="enableCustomHud()">تعديل أماكن الأزرار ✏️</button>
+            <button class="settings-btn" onclick="location.reload()">خروج من اللعبة</button>
         </div>
 
-        <!-- أزرار الصوت أعلى اليمين -->
-        <div id="audioControls">
-            <div id="speakerBtn" class="icon-btn" onclick="toggleSpeaker()">🔊</div>
-            <div id="micBtn" onclick="toggleMic()" class="icon-btn off">🎙️</div>
-        </div>
+        <div id="joystickZone" class="movable-control"><div id="joystickKnob"></div></div>
+        <div id="btnJump" class="movable-control action-circle-btn" onclick="doJump()">قفز</div>
+        <div id="btnSprint" class="movable-control action-circle-btn" onclick="toggleSprint()">ركض</div>
+        <div id="btnPunch" class="movable-control action-circle-btn" onclick="doPunch()">ضرب</div>
 
-        <!-- جير التحكم Joystick -->
-        <div id="joystickZone"><div id="joystickKnob"></div></div>
-
-        <!-- أزرار الحركة والضرب -->
-        <div id="actionControls">
-            <div class="action-btn" onclick="doJump()">قفز</div>
-            <div class="action-btn" id="sprintBtn" onclick="toggleSprint()">ركض</div>
-            <div class="action-btn" style="background:#ff3300;" onclick="doPunch()">ضرب 👊</div>
-        </div>
+        <button id="saveHudBtn" onclick="saveCustomHud()">حفظ الأماكن 💾</button>
 
         <div id="crosshair"></div>
     </div>
@@ -121,11 +116,19 @@
         let scene, camera, renderer, selectedGender = 'male';
         let otherPlayers = {};
         let myData = {};
-        let isFrontManMode = false;
-        let isSprinting = false;
+        let isFrontManMode = false, isSprinting = false;
+        let sensitivity = 0.005;
+        let isMicOn = false, isSpeakerOn = true;
+        let mediaRecorder = null, localAudioStream = null;
+        let isEditHudMode = false;
+        let audioCtx = null;
 
-        // استرجاع البيانات المحفوظة تلقائياً
+        const keys = { w: false, a: false, s: false, d: false };
+
         window.onload = () => {
+            checkOrientation();
+            window.addEventListener('resize', checkOrientation);
+
             const urlParams = new URLSearchParams(window.location.search);
             if(urlParams.get('role') === 'frontman') {
                 isFrontManMode = true;
@@ -135,9 +138,27 @@
             } else {
                 if(localStorage.getItem('sg_name')) document.getElementById('pName').value = localStorage.getItem('sg_name');
                 if(localStorage.getItem('sg_num')) document.getElementById('pNum').value = localStorage.getItem('sg_num');
-                if(localStorage.getItem('sg_gender')) setGender(localStorage.getItem('sg_gender'));
             }
+            loadCustomHud();
         };
+
+        function checkOrientation() {
+            document.getElementById('rotateNotice').style.display = (window.innerHeight > window.innerWidth) ? 'flex' : 'none';
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
+            else document.exitFullscreen();
+        }
+
+        function toggleSettings() {
+            const menu = document.getElementById('settingsMenu');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        }
+
+        function updateSensitivity() {
+            sensitivity = document.getElementById('sensSlider').value * 0.001;
+        }
 
         function setGender(g) {
             selectedGender = g;
@@ -151,82 +172,56 @@
             const pass = document.getElementById('pPass').value;
 
             if(!name || (!isFrontManMode && (isNaN(num) || num < 1 || num > 30)) || !pass) {
-                return alert("يرجى ملء جميع الحقول واختيار رقم بين 1 و 30!");
+                return alert("أدخل كافة البيانات واختر رقماً بين 1 و 30!");
             }
+
+            // تفعيل نظام الصوت للمتصفح بضغطة زر الدخول
+            window.AudioContext = window.AudioContext || window.webkitAudioContext;
+            audioCtx = new AudioContext();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
 
             myData = { name, number: num, gender: selectedGender, pass, isFrontMan: isFrontManMode };
 
             socket.emit('verifyJoin', myData, (res) => {
                 if(res.success) {
-                    if(!isFrontManMode) {
-                        localStorage.setItem('sg_name', name);
-                        localStorage.setItem('sg_num', num);
-                        localStorage.setItem('sg_gender', selectedGender);
-                    }
+                    toggleFullscreen();
                     document.getElementById('lobbyUI').style.display = 'none';
                     document.getElementById('hud').style.display = 'block';
                     init3D();
-                } else {
-                    alert(res.message);
-                }
+                    setupControls();
+                } else { alert(res.message); }
             });
         }
 
-        // إعداد بيئة 3D (اللوبي)
         function init3D() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a24);
+            scene.background = new THREE.Color(0x1e1e28);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            camera.position.set(0, 1.6, 15);
+            camera.position.set(0, 1.7, 12);
 
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             document.body.appendChild(renderer.domElement);
 
-            const light = new THREE.DirectionalLight(0xffffff, 1);
-            light.position.set(0, 20, 10);
+            const light = new THREE.DirectionalLight(0xffffff, 1.2);
+            light.position.set(0, 30, 10);
             scene.add(light);
-            scene.add(new THREE.AmbientLight(0x555566));
+            scene.add(new THREE.AmbientLight(0x777788));
 
-            // أرضية وجدران اللوبي (غرفة النوم)
-            const floor = new THREE.Mesh(new THREE.PlaneGeometry(40, 40), new THREE.MeshStandardMaterial({ color: 0x333344 }));
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(60, 60), new THREE.MeshStandardMaterial({ color: 0xd0d5dd }));
             floor.rotation.x = -Math.PI / 2;
             scene.add(floor);
 
-            // إضافة أسرّة طابقية على الأطراف
-            for(let i = -15; i <= 15; i += 10) {
-                createBed(-18, i); createBed(18, i);
-            }
-
-            setupJoystick();
             animate();
         }
 
-        function createBed(x, z) {
-            const bed = new THREE.Mesh(new THREE.BoxGeometry(2, 3, 5), new THREE.MeshStandardMaterial({ color: 0x555555 }));
-            bed.position.set(x, 1.5, z);
-            scene.add(bed);
-        }
-
-        // إنشاء مجسمات 3D للشخصيات (اللاعبين + Front Man)
         function createPlayerMesh(player) {
             const group = new THREE.Group();
+            const color = player.isFrontMan ? 0x050505 : (player.gender === 'female' ? 0x00b386 : 0x008055);
+            const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.8, 16), new THREE.MeshStandardMaterial({ color }));
+            group.add(body);
 
-            if (player.isFrontMan) {
-                // مجسم Front Man المتميز باللون الأسود والقناع
-                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.6, 1.8, 16), new THREE.MeshStandardMaterial({ color: 0x050505 }));
-                const head = new THREE.Mesh(new THREE.ConeGeometry(0.4, 0.6, 5), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-                head.position.y = 1.1; head.rotation.x = Math.PI;
-                group.add(body, head);
-            } else {
-                // مجسم اللاعبين بالترينك الخضراء
-                const color = player.gender === 'female' ? 0x00b386 : 0x008055;
-                const body = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 1.8, 16), new THREE.MeshStandardMaterial({ color: color }));
-                group.add(body);
-            }
-
-            // إضافة اسم ورقم اللاعب فوق رأسه
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             canvas.width = 256; canvas.height = 64;
@@ -244,72 +239,205 @@
             otherPlayers[player.id] = group;
         }
 
-        // تحكم Joystick
+        function setupControls() {
+            document.addEventListener('keydown', (e) => {
+                if(e.code === 'KeyW') keys.w = true;
+                if(e.code === 'KeyS') keys.s = true;
+                if(e.code === 'KeyA') keys.a = true;
+                if(e.code === 'KeyD') keys.d = true;
+                if(e.code === 'Space') doJump();
+            });
+            document.addEventListener('keyup', (e) => {
+                if(e.code === 'KeyW') keys.w = false;
+                if(e.code === 'KeyS') keys.s = false;
+                if(e.code === 'KeyA') keys.a = false;
+                if(e.code === 'KeyD') keys.d = false;
+            });
+
+            let isTouching = false, lastX = 0;
+            window.addEventListener('touchstart', (e) => {
+                if(isEditHudMode || e.target.closest('.movable-control') || e.target.closest('#topRightControls') || e.target.closest('#settingsMenu')) return;
+                isTouching = true; lastX = e.touches[0].clientX;
+            });
+            window.addEventListener('touchmove', (e) => {
+                if(!isTouching || isEditHudMode) return;
+                const deltaX = e.touches[0].clientX - lastX;
+                camera.rotation.y -= deltaX * sensitivity;
+                lastX = e.touches[0].clientX;
+            });
+            window.addEventListener('touchend', () => isTouching = false);
+
+            document.addEventListener('click', (e) => {
+                if(document.getElementById('hud').style.display === 'block' && !isEditHudMode && !e.target.closest('#settingsMenu') && !e.target.closest('#topRightControls')) {
+                    document.body.requestPointerLock();
+                }
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (document.pointerLockElement === document.body && !isEditHudMode) {
+                    camera.rotation.y -= e.movementX * sensitivity;
+                }
+            });
+
+            setupJoystick();
+        }
+
         function setupJoystick() {
             const zone = document.getElementById('joystickZone');
             const knob = document.getElementById('joystickKnob');
             let active = false;
 
-            zone.addEventListener('touchstart', () => active = true);
+            zone.addEventListener('touchstart', () => { if(!isEditHudMode) active = true; });
             window.addEventListener('touchend', () => {
-                active = false; knob.style.top = '35px'; knob.style.left = '35px';
+                active = false; knob.style.top = '33px'; knob.style.left = '33px';
             });
 
             zone.addEventListener('touchmove', (e) => {
-                if(!active) return;
+                if(!active || isEditHudMode) return;
                 const touch = e.touches[0];
                 const rect = zone.getBoundingClientRect();
-                const x = touch.clientX - rect.left - 60;
-                const y = touch.clientY - rect.top - 60;
-                const dist = Math.min(Math.hypot(x, y), 40);
+                const x = touch.clientX - rect.left - 55;
+                const y = touch.clientY - rect.top - 55;
+                const dist = Math.min(Math.hypot(x, y), 35);
                 const angle = Math.atan2(y, x);
 
-                knob.style.left = `${35 + Math.cos(angle) * dist}px`;
-                knob.style.top = `${35 + Math.sin(angle) * dist}px`;
+                knob.style.left = `${33 + Math.cos(angle) * dist}px`;
+                knob.style.top = `${33 + Math.sin(angle) * dist}px`;
 
-                const speed = (isSprinting ? 0.2 : 0.1);
-                camera.translateX((Math.cos(angle) * dist / 40) * speed);
-                camera.translateZ((Math.sin(angle) * dist / 40) * speed);
+                const speed = (isSprinting ? 0.22 : 0.1);
+                camera.translateX((Math.cos(angle) * dist / 35) * speed);
+                camera.translateZ((Math.sin(angle) * dist / 35) * speed);
             });
         }
 
-        function doJump() { camera.position.y = 2.5; setTimeout(() => camera.position.y = 1.6, 300); }
-        function toggleSprint() {
-            isSprinting = !isSprinting;
-            document.getElementById('sprintBtn').style.background = isSprinting ? '#00ffcc' : 'rgba(255, 0, 85, 0.8)';
-        }
-        function doPunch() { socket.emit('playerPunch', Object.keys(otherPlayers)[0]); }
+        function enableCustomHud() {
+            isEditHudMode = true;
+            document.exitPointerLock();
+            toggleSettings();
+            document.getElementById('saveHudBtn').style.display = 'block';
 
-        function toggleSettings() {
-            const menu = document.getElementById('settingsMenu');
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+            document.querySelectorAll('.movable-control').forEach(el => {
+                el.classList.add('edit-mode');
+                makeElementDraggable(el);
+            });
         }
+
+        function makeElementDraggable(el) {
+            let pX = 0, pY = 0;
+            el.ontouchstart = (e) => {
+                pX = e.touches[0].clientX - el.offsetLeft;
+                pY = e.touches[0].clientY - el.offsetTop;
+                document.ontouchmove = (ev) => {
+                    if(!isEditHudMode) return;
+                    el.style.left = `${ev.touches[0].clientX - pX}px`;
+                    el.style.top = `${ev.touches[0].clientY - pY}px`;
+                    el.style.bottom = 'auto'; el.style.right = 'auto';
+                };
+            };
+        }
+
+        function saveCustomHud() {
+            isEditHudMode = false;
+            document.getElementById('saveHudBtn').style.display = 'none';
+            const hudData = {};
+
+            document.querySelectorAll('.movable-control').forEach(el => {
+                el.classList.remove('edit-mode');
+                el.ontouchstart = null;
+                hudData[el.id] = { left: el.style.left, top: el.style.top };
+            });
+
+            localStorage.setItem('sg_custom_hud', JSON.stringify(hudData));
+            alert("تم حفظ أماكن الأزرار بنجاح!");
+        }
+
+        function loadCustomHud() {
+            const saved = localStorage.getItem('sg_custom_hud');
+            if(saved) {
+                const hudData = JSON.parse(saved);
+                Object.keys(hudData).forEach(id => {
+                    const el = document.getElementById(id);
+                    if(el) {
+                        el.style.left = hudData[id].left;
+                        el.style.top = hudData[id].top;
+                        el.style.bottom = 'auto'; el.style.right = 'auto';
+                    }
+                });
+            }
+        }
+
+        // بث المايك واستقبال الأصوات والموسيقى
+        async function toggleMic() {
+            const micBtn = document.getElementById('micBtn');
+            if(!isMicOn) {
+                try {
+                    localAudioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(localAudioStream, { mimeType: 'audio/webm' });
+                    mediaRecorder.ondataavailable = e => {
+                        if(e.data.size > 0) socket.emit('playerVoiceStream', e.data);
+                    };
+                    mediaRecorder.start(100);
+                    isMicOn = true;
+                    micBtn.classList.add('active-green');
+                } catch(err) { alert("يرجى السماح بالمايك من المتصفح!"); }
+            } else {
+                if(mediaRecorder) mediaRecorder.stop();
+                if(localAudioStream) localAudioStream.getTracks().forEach(t => t.stop());
+                isMicOn = false;
+                micBtn.classList.remove('active-green');
+            }
+        }
+
+        function toggleSpeaker() {
+            isSpeakerOn = !isSpeakerOn;
+            document.getElementById('speakerBtn').classList.toggle('active-green', isSpeakerOn);
+        }
+
+        function playAudioChunk(chunk) {
+            if(!isSpeakerOn) return;
+            const blob = new Blob([chunk], { type: 'audio/webm' });
+            const audio = new Audio(URL.createObjectURL(blob));
+            audio.play().catch(() => {});
+        }
+
+        socket.on('receiveAdminVoice', playAudioChunk);
+        socket.on('receivePlayerVoice', playAudioChunk);
+
+        socket.on('syncMusic', (data) => {
+            const audio = document.getElementById('bgMusic');
+            if(data.action === 'play' && data.audioData) {
+                audio.src = data.audioData;
+                audio.loop = data.loop;
+                audio.play().catch(() => alert("اضغط على الشاشة لتشغيل الصوت!"));
+            } else if(data.action === 'pause') audio.pause();
+            else if(data.action === 'stop') { audio.pause(); audio.currentTime = 0; }
+        });
+
+        function doJump() { if(!isEditHudMode) { camera.position.y = 2.5; setTimeout(() => camera.position.y = 1.7, 300); } }
+        function toggleSprint() { if(!isEditHudMode) isSprinting = !isSprinting; }
+        function doPunch() { if(!isEditHudMode) socket.emit('playerPunch', Object.keys(otherPlayers)[0]); }
 
         function animate() {
             requestAnimationFrame(animate);
+
+            if(!isEditHudMode) {
+                const speed = isSprinting ? 0.2 : 0.09;
+                if(keys.w) camera.translateZ(-speed);
+                if(keys.s) camera.translateZ(speed);
+                if(keys.a) camera.translateX(-speed);
+                if(keys.d) camera.translateX(speed);
+            }
+
             if(renderer && scene && camera) {
                 renderer.render(scene, camera);
                 socket.emit('playerMove', { x: camera.position.x, y: camera.position.y, z: camera.position.z, rotationY: camera.rotation.y });
             }
         }
 
-        // أحداث السيرفر المباشرة
         socket.on('updatePlayerCount', c => document.getElementById('playerCountDisplay').innerText = `${c}/30`);
-        socket.on('currentPlayers', players => {
-            Object.values(players).forEach(p => { if(p.id !== socket.id) createPlayerMesh(p); });
-        });
+        socket.on('currentPlayers', players => Object.values(players).forEach(p => { if(p.id !== socket.id) createPlayerMesh(p); }));
         socket.on('newPlayerJoined', p => createPlayerMesh(p));
-        socket.on('playerMoved', p => {
-            if(otherPlayers[p.id]) otherPlayers[p.id].position.set(p.x, p.y - 0.9, p.z);
-        });
-        socket.on('playerDisconnected', id => {
-            if(otherPlayers[id]) { scene.remove(otherPlayers[id]); delete otherPlayers[id]; }
-        });
-
-        socket.on('receiveAdminVoice', chunk => {
-            const blob = new Blob([chunk], { type: 'audio/webm' });
-            new Audio(URL.createObjectURL(blob)).play();
-        });
+        socket.on('playerMoved', p => { if(otherPlayers[p.id]) otherPlayers[p.id].position.set(p.x, p.y - 0.9, p.z); });
+        socket.on('playerDisconnected', id => { if(otherPlayers[id]) { scene.remove(otherPlayers[id]); delete otherPlayers[id]; } });
     </script>
 </body>
 </html>
