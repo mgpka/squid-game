@@ -5,14 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>لوحة تحكم المسؤول | Admin Control</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0f0f15; color: #fff; margin: 20px; }
-        .card { background: #181824; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #2a2a3d; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #0c0c12; color: #fff; margin: 20px; }
+        .card { background: #161622; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #ff0055; }
         h2 { color: #ff0055; border-bottom: 2px solid #ff0055; padding-bottom: 5px; margin-top: 0; }
         button { background: #ff0055; color: #fff; border: none; padding: 10px 18px; font-size: 14px; border-radius: 6px; cursor: pointer; margin: 4px; font-weight: bold; }
         button:hover { background: #d40045; }
         button.gold { background: #ffb700; color: #000; }
         button.danger { background: #cc0000; }
-        input[type="file"], input[type="password"], input[type="text"] { padding: 8px; border-radius: 5px; border: 1px solid #444; background: #222; color: #fff; margin: 3px; }
+        input[type="file"], input[type="password"], input[type="text"] { padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: #fff; margin: 3px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #333; padding: 10px; text-align: center; }
         th { background: #ff0055; }
@@ -46,16 +46,14 @@
     </div>
 
     <div class="card" id="micCard" style="display:none;">
-        <h2>🎙️ بث المايك المباشر (Broadcast Voice)</h2>
-        <p>تحدث مباشرة مع جميع اللاعبين في الساحة:</p>
-        <button id="micBtn" onclick="toggleMic()">تشغيل المايك للمسؤول 🎙️</button>
+        <h2>🎙️ المايك المباشر للمسؤول</h2>
+        <button id="micBtn" onclick="toggleMic()">تشغيل بث المايك المباشر 🎙️</button>
         <span class="status" id="micStatus">المايك مغلق</span>
     </div>
 
     <div class="card" id="musicCard" style="display:none;">
-        <h2>🎵 مشغل الموسيقى (DJ Control)</h2>
+        <h2>🎵 مشغل الموسيقى والأغاني (DJ Control)</h2>
         <input type="file" id="audioFile" accept="audio/*" onchange="loadAudio(event)"><br><br>
-        <label><input type="checkbox" id="loopCheck" checked> تكرار تلقائي (Loop)</label><br><br>
         <button onclick="sendMusicAction('play')">تشغيل أونلاين للجميع ▶️</button>
         <button onclick="sendMusicAction('pause')">إيقاف مؤقت ⏸️</button>
         <button onclick="sendMusicAction('stop')">إيقاف نهائي ⏹️</button>
@@ -144,32 +142,32 @@
         function toggleGlobalMute() { isMuted = !isMuted; socket.emit('adminToggleGlobalMute', isMuted); }
         function startGame(sec) { socket.emit('adminStartGame', sec); }
 
-        // تشغيل مايك المسؤول
         async function toggleMic() {
             const btn = document.getElementById('micBtn');
             const status = document.getElementById('micStatus');
             if (!isMicOn) {
                 try {
                     localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                    mediaRecorder = new MediaRecorder(localStream, { mimeType: 'audio/webm' });
+                    mediaRecorder = new MediaRecorder(localStream);
                     mediaRecorder.ondataavailable = (e) => {
-                        if(e.data.size > 0) socket.emit('adminAudioStream', e.data);
+                        if(e.data && e.data.size > 0) {
+                            e.data.arrayBuffer().then(buffer => socket.emit('adminAudioStream', buffer));
+                        }
                     };
-                    mediaRecorder.start(100);
+                    mediaRecorder.start(300); // إرسال كتل كل 300 مللي ثانية لسلاسة الصوت
                     isMicOn = true;
                     btn.innerText = "إيقاف المايك 🔴";
-                    status.innerText = "🔴 المايك يبث حي لجميع اللاعبين الآن";
-                } catch(err) { alert("يرجى إعطاء صلاحية استخدام المايك!"); }
+                    status.innerText = "🔴 المايك يبث حي وبدون انقطاع للجميع";
+                } catch(err) { alert("يرجى إعطاء صلاحية المايك من المتصفح!"); }
             } else {
                 if(mediaRecorder) mediaRecorder.stop();
                 if(localStream) localStream.getTracks().forEach(t => t.stop());
                 isMicOn = false;
-                btn.innerText = "تشغيل المايك للمسؤول 🎙️";
+                btn.innerText = "تشغيل بث المايك المباشر 🎙️";
                 status.innerText = "المايك مغلق";
             }
         }
 
-        // تشغيل الموسيقى أونلاين
         function loadAudio(e) {
             const file = e.target.files[0];
             if(!file) return;
@@ -180,11 +178,7 @@
 
         function sendMusicAction(action) {
             if(action === 'play' && !audioDataBuffer) return alert("يرجى اختيار ملف صوتي أولاً!");
-            socket.emit('adminMusicControl', {
-                action: action,
-                audioData: audioDataBuffer,
-                loop: document.getElementById('loopCheck').checked
-            });
+            socket.emit('adminMusicControl', { action: action, audioData: audioDataBuffer });
         }
 
         socket.on('updatePlayerList', players => renderPlayers(players));
