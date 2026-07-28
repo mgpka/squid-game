@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>لوحة تحكم المسؤول | Admin Control</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #121212; color: #fff; margin: 20px; }
+        .card { background: #1e1e1e; padding: 20px; margin-bottom: 15px; border-radius: 10px; border: 1px solid #333; }
+        h2 { color: #ff0055; border-bottom: 2px solid #ff0055; padding-bottom: 5px; }
+        button { background: #ff0055; color: #fff; border: none; padding: 10px 20px; font-size: 16px; border-radius: 5px; cursor: pointer; margin: 5px; }
+        button:hover { background: #d40045; }
+        input[type="file"], input[type="password"] { padding: 10px; border-radius: 5px; border: 1px solid #444; background: #222; color: #fff; }
+        .status { font-weight: bold; color: #00ffcc; margin-right: 10px; }
+    </style>
+</head>
+<body>
+
+    <h1>🎮 لوحة تحكم المسؤول (Tournament Admin)</h1>
+
+    <div class="card" id="loginCard">
+        <h2>تسجيل الدخول</h2>
+        <input type="password" id="passInput" placeholder="أدخل كلمة السر">
+        <button onclick="login()">دخول</button>
+    </div>
+
+    <div class="card" id="controlCard" style="display:none;">
+        <h2>إدارة اللعبة والبدء</h2>
+        <button onclick="startGame(10)">بدء العد التنازلي (10 ثواني)</button>
+        <span class="status" id="gameStatus">في انتظار البدء...</span>
+    </div>
+
+    <div class="card" id="micCard" style="display:none;">
+        <h2>🎙️ المايك المباشر (Broadcast Voice)</h2>
+        <button id="micBtn" onclick="toggleMic()">تشغيل المايك للجميع</button>
+        <span class="status" id="micStatus">المايك مغلق</span>
+    </div>
+
+    <div class="card" id="musicCard" style="display:none;">
+        <h2>🎵 مشغل الموسيقى (DJ Control)</h2>
+        <input type="file" id="audioFile" accept="audio/*,video/mp4" onchange="loadAudio(event)"><br><br>
+        <label><input type="checkbox" id="loopCheck" checked> تكرار تلقائي (Loop)</label><br><br>
+        <button onclick="sendMusicAction('play')">تشغيل للجميع</button>
+        <button onclick="sendMusicAction('pause')">إيقاف مؤقت</button>
+        <button onclick="sendMusicAction('stop')">إيقاف نهائي</button>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let isMicOn = false;
+        let mediaRecorder;
+        let audioDataBuffer = null;
+
+        function login() {
+            const pass = document.getElementById('passInput').value;
+            socket.emit('adminLogin', pass, (res) => {
+                if(res.success) {
+                    document.getElementById('loginCard').style.display = 'none';
+                    document.getElementById('controlCard').style.display = 'block';
+                    document.getElementById('micCard').style.display = 'block';
+                    document.getElementById('musicCard').style.display = 'block';
+                } else {
+                    alert(res.message);
+                }
+            });
+        }
+
+        function startGame(sec) {
+            socket.emit('adminStartGame', sec);
+            document.getElementById('gameStatus').innerText = "تم إرسال أمر البدء!";
+        }
+
+        async function toggleMic() {
+            if (!isMicOn) {
+                try {
+                    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    mediaRecorder = new MediaRecorder(stream);
+                    mediaRecorder.ondataavailable = e => {
+                        socket.emit('adminAudioStream', e.data);
+                    };
+                    mediaRecorder.start(100);
+                    isMicOn = true;
+                    document.getElementById('micBtn').innerText = "إيقاف المايك";
+                    document.getElementById('micStatus').innerText = "🔴 المايك يبث الآن حي للجميع";
+                } catch (err) {
+                    alert("يرجى إعطاء الإذن لاستخدام المايك");
+                }
+            } else {
+                mediaRecorder.stop();
+                isMicOn = false;
+                document.getElementById('micBtn').innerText = "تشغيل المايك للجميع";
+                document.getElementById('micStatus').innerText = "المايك مغلق";
+            }
+        }
+
+        function loadAudio(event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                audioDataBuffer = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function sendMusicAction(action) {
+            const isLoop = document.getElementById('loopCheck').checked;
+            socket.emit('adminMusicControl', {
+                action: action,
+                audioData: audioDataBuffer,
+                loop: isLoop
+            });
+        }
+    </script>
+</body>
+</html>
