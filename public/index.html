@@ -20,6 +20,41 @@
         .gender-btn.active { border-color: #ff0055; background: #ff0055; font-weight: bold; }
         #joinBtn { padding: 12px; font-size: 17px; font-weight: bold; background: #ff0055; color: white; border: none; border-radius: 6px; cursor: pointer; margin-top: 5px; }
 
+        /* شاشة فيديو التريلر السينمائي مع إخفاء العلامة المائية */
+        #trailerContainer { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 100%; 
+            background: #000; 
+            z-index: 9999; 
+            display: none; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: hidden; 
+        }
+        #trailerContainer video { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transform: scale(1.07); /* تكبير بنسبة 7% لإقصاء العلامة المائية خارج الشاشة */
+        }
+        #skipTrailerBtn { 
+            position: absolute; 
+            top: 20px; 
+            left: 20px; 
+            z-index: 10000; 
+            background: rgba(255, 0, 85, 0.85); 
+            border: 2px solid #fff; 
+            color: white; 
+            padding: 10px 20px; 
+            border-radius: 25px; 
+            font-weight: bold; 
+            cursor: pointer; 
+            backdrop-filter: blur(5px); 
+        }
+
         #hud { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; display: none; }
         #topStats { position: absolute; top: 12px; width: 100%; text-align: center; color: white; text-shadow: 2px 2px 5px #000; font-family: sans-serif; }
         #playerCountDisplay { font-size: 34px; font-weight: 900; }
@@ -57,6 +92,11 @@
 
     <div id="rotateNotice">📱 يرجى تدوير الموبايل للوضع الأفقي للعب</div>
 
+    <div id="trailerContainer">
+        <button id="skipTrailerBtn" onclick="finishTrailerAndStartGame()">تخطي الفيديو ⏭️</button>
+        <video id="trailerVideo" src="trailer.mp4" playsinline></video>
+    </div>
+
     <div id="lobbyUI">
         <h1>SQUID GAME AL PRINCES</h1>
         <div class="form-group">
@@ -78,7 +118,7 @@
     <div id="hud">
         <div id="topStats">
             <div id="playerCountDisplay">1/30</div>
-            <div id="gameStatusText" style="font-size:16px; color:#00ffcc; font-weight:bold;">جاري تحميل ملف اللوبي (79MB)... يرجى الانتظار</div>
+            <div id="gameStatusText" style="font-size:16px; color:#00ffcc; font-weight:bold;">مرحباً بك في ساحة اللعب</div>
         </div>
 
         <div id="topRightControls" class="movable-element">
@@ -211,25 +251,39 @@
                 if(res.success) {
                     toggleFullscreen();
                     document.getElementById('lobbyUI').style.display = 'none';
-                    document.getElementById('hud').style.display = 'block';
-                    init3D();
-                    setupControls();
+
+                    // 1. عرض وتدشين التريلر
+                    const trailerContainer = document.getElementById('trailerContainer');
+                    const trailerVideo = document.getElementById('trailerVideo');
+                    trailerContainer.style.display = 'flex';
+                    
+                    trailerVideo.play().catch(() => {});
+
+                    // 2. التحميل الخفي للملف الأصلي (79 ميغا)
+                    initOriginalModelInBackground();
+
+                    // 3. عند انتهاء الفيديو يدخل اللعبة مباشرة
+                    trailerVideo.onended = () => {
+                        finishTrailerAndStartGame();
+                    };
+
                 } else { alert(res.message); }
             });
         }
 
-        function init3D() {
+        function initOriginalModelInBackground() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x0a0d12);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
             camera.rotation.order = 'YXZ';
-            camera.position.set(0, 5, 15);
+            camera.position.set(0, PLAYER_EYE_HEIGHT, 5);
 
-            renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
             document.body.appendChild(renderer.domElement);
+            renderer.domElement.style.display = 'none'; // مخفي طوال مدة التريلر
 
             const ambientLight = new THREE.AmbientLight(0xffffff, 2.0);
             scene.add(ambientLight);
@@ -238,45 +292,32 @@
             sunLight.position.set(10, 50, 20);
             scene.add(sunLight);
 
-            const gridHelper = new THREE.GridHelper(50, 50, 0xff0055, 0x444444);
-            gridHelper.position.y = 0;
-            scene.add(gridHelper);
-
-            loadLobbyModel();
-            animate();
-        }
-
-        // تحميل اللوبي مع إظهار نسبة التحميل أو الخطأ مباشرة على الشاشة
-        function loadLobbyModel() {
+            // تحميل الملف الأصلي الكامل من Catbox بدون أي ضغط
             const loader = new THREE.GLTFLoader();
-            const statusText = document.getElementById('gameStatusText');
-
             loader.load('https://files.catbox.moe/cb829z.glb', (gltf) => {
                 const lobbyModel = gltf.scene;
-                
                 lobbyModel.traverse((child) => {
                     if (child.isMesh) {
                         child.castShadow = true;
                         child.receiveShadow = true;
                     }
                 });
-
                 lobbyModel.position.set(0, 0, 0);
                 scene.add(lobbyModel);
-                statusText.innerText = "✅ تم تحميل اللوبي بنجاح!";
-                statusText.style.color = "#00ffcc";
-            }, (xhr) => {
-                if (xhr.total > 0) {
-                    const percent = Math.floor((xhr.loaded / xhr.total) * 100);
-                    statusText.innerText = `جاري تحميل اللوبي: ${percent}%`;
-                } else {
-                    statusText.innerText = `جاري التحميل: ${(xhr.loaded / (1024*1024)).toFixed(1)} MB`;
-                }
-            }, (err) => {
-                console.error("خطأ التحميل:", err);
-                statusText.innerText = "❌ خطأ في تحميل الملف (تحقق من الاتصال أو الرابط)";
-                statusText.style.color = "#ff4444";
+                console.log("✅ تم تحميل اللوبي الأصلي كاملاً في الخلفية!");
             });
+        }
+
+        function finishTrailerAndStartGame() {
+            const trailerVideo = document.getElementById('trailerVideo');
+            if(trailerVideo) trailerVideo.pause();
+
+            document.getElementById('trailerContainer').style.display = 'none';
+            if(renderer) renderer.domElement.style.display = 'block';
+            document.getElementById('hud').style.display = 'block';
+
+            setupControls();
+            animate();
         }
 
         function createPlayerMesh(player) {
